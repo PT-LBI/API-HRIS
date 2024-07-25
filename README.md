@@ -1,2 +1,2 @@
-# API-CV88
-API for CV 88
+# API-HRIS 
+API for HRIS Lautan Berlian Indah
