@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Superadmin;
 
 use Illuminate\Http\Request;
 use App\Models\AdminMenu;
@@ -59,7 +59,7 @@ class AdminMenuController extends Controller
                 'per_page' => $res->perPage(),
                 'total' => $res->total(),
                 'total_all' => $total_all,
-                'data' => $res->items(),
+                'data' => convertResponseArray($res->items()),
             ];
 
             $output = [
@@ -163,7 +163,7 @@ class AdminMenuController extends Controller
                     'code' => 200,
                     'status' => 'success',
                     'message' => 'Data ditemukan',
-                    'result' => $data,
+                    'result' => convertResponseSingle($data),
                 ];
             } else {
                 $output = [

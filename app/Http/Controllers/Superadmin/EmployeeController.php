@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Superadmin;
 
 use Illuminate\Http\Request;
-use App\Models\Employee;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -23,59 +24,83 @@ class EmployeeController extends Controller
         try {
             $page = request()->query('page');
             $limit = request()->query('limit') ?? 10;
-            $sort = request()->query('sort') ?? 'employee_id';
+            $sort = request()->query('sort') ?? 'user_id';
             $dir = request()->query('dir') ?? 'DESC';
             $search = request()->query('search');
+            $status = request()->query('status');
+            $company_id = request()->query('company_id');
+            $division_id = request()->query('division_id');
 
-            $query = DB::table('employees')
+            $query = User::query()
                 ->select(
-                    'employee_id',
-                    'employee_code',
-                    'employee_name',
-                    'employee_address',
-                    'employee_identity_address',
-                    'employee_identity_number',
-                    'employee_npwp',
-                    'employee_bpjs_kes',
-                    'employee_bpjs_tk',
-                    'employee_place_birth',
-                    'employee_position',
-                    'employee_status',
-                    'created_at',
+                    'user_id',
+                    'user_code',
+                    'email',
+                    'user_name',
+                    'user_address',
+                    'user_identity_address',
+                    'user_identity_number',
+                    'user_npwp',
+                    'user_bpjs_kes',
+                    'user_bpjs_tk',
+                    'user_place_birth',
+                    'user_company_id',
+                    'company_name',
+                    'user_division_id',
+                    'division_name',
+                    'user_status',
+                    'users.created_at',
                 )
-                ->where('deleted_at', null);
+                ->leftJoin('companies', 'user_company_id', '=', 'company_id')
+                ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
+                ->where('user_role', 'staff')
+                ->where('users.deleted_at', null);
 
             if (!empty($search)) {
                 $query->where(function ($query) use ($search) {
-                    $query->where('employee_code', 'like', '%' . $search . '%')
-                        ->orWhere('employee_name', 'like', '%' . $search . '%');
+                    $query->where('user_code', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%')
+                        ->orWhere('user_name', 'like', '%' . $search . '%');
                 });
+            }
+
+            if ($status && $status !== null) {
+                $query->where('user_status', $status);
+            }
+
+            if ($division_id && $division_id !== null) {
+                $query->where('user_division_id', $division_id);
+            }
+
+            if ($company_id && $company_id !== null) {
+                $query->where('user_company_id', $company_id);
             }
 
             $query->orderBy($sort, $dir);
             $res = $query->paginate($limit, ['*'], 'page', $page);
 
             //get total data
-            $queryTotal = DB::table('users')
+            $queryTotal = User::query()
                 ->select('1 as total')
+                ->where('user_role', 'staff')
                 ->where('deleted_at', null);
             $total_all = $queryTotal->count();
 
-            $data = [
+            $response = [
                 'current_page' => $res->currentPage(),
                 'from' => $res->firstItem(),
                 'last_page' => $res->lastPage(),
                 'per_page' => $res->perPage(),
                 'total' => $res->total(),
                 'total_all' => $total_all,
-                'data' => $res->items(),
+                'data' => convertResponseArray($res->items()),
             ];
 
             $output = [
                 'code' => 200,
                 'status' => 'success',
                 'message' => 'Data ditemukan',
-                'result' => $data,
+                'result' => $response,
             ];
            
         } catch (Exception $e) {
@@ -90,8 +115,13 @@ class EmployeeController extends Controller
     public function create()
     {
         $validator = Validator::make(request()->all(), [
-            'employee_name' => 'required',
-            'employee_image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'user_name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6|max:20',
+            'user_company_id' => 'required|integer',
+            'user_division_id' => 'required|integer',
+            'user_role' => 'required',
+            'user_profile_url' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -102,31 +132,38 @@ class EmployeeController extends Controller
             ], 200);
         }
 
-        if (request()->file('employee_image')) {
-            $image = request()->file('employee_image');
+        if (request()->file('user_profile_url')) {
+            $image = request()->file('user_profile_url');
             $image_name = time() . '-' . $image->getClientOriginalName();
-            $image_path = $image->storeAs('images/employees', $image_name, 'public');
+            $image_path = $image->storeAs('images/users', $image_name, 'public');
             $image_url = env('APP_URL'). '/storage/' . $image_path;
         }
-        $employee_code = $this->generate_number();
+        $user_code = generateCode();
 
-        $user = Employee::create([
-            'employee_code' => $employee_code,
-            'employee_name' => request('employee_name'),
-            'employee_address' => request('employee_address'),
-            'employee_identity_address' => request('employee_identity_address'),
-            'employee_identity_number' => request('employee_identity_number'),
-            'employee_bpjs_kes' => request('employee_bpjs_kes'),
-            'employee_bpjs_tk' => request('employee_bpjs_tk'),
-            'employee_place_birth' => request('employee_place_birth'),
-            'employee_education_json' => request('employee_education_json'),
-            'employee_marital_status' => request('employee_marital_status'),
-            'employee_number_children' => request('employee_number_children'),
-            'employee_emergency_contact' => request('employee_emergency_contact'),
-            'employee_entry_year' => request('employee_entry_year'),
-            'employee_position' => request('employee_position'),
-            'employee_image' => isset($image_url) ? $image_url : null,
-            'created_at' => date('Y-m-d H:i:s'),
+        $user = User::create([
+            'user_code' => $user_code,
+            'email' => request('email'),
+            'password' => Hash::make(request('password')),
+            'user_name' => request('user_name'),
+            'user_address' => request('user_address'),
+            'user_identity_address' => request('user_identity_address'),
+            'user_identity_number' => request('user_identity_number'),
+            'user_bpjs_kes' => request('user_bpjs_kes'),
+            'user_bpjs_tk' => request('user_bpjs_tk'),
+            'user_place_birth' => request('user_place_birth'),
+            'user_education_json' => request('user_education_json'),
+            'user_marital_status' => request('user_marital_status'),
+            'user_number_children' => request('user_number_children'),
+            'user_phone_number' => request('user_phone_number'),
+            'user_emergency_contact' => request('user_emergency_contact'),
+            'user_entry_year' => request('user_entry_year'),
+            'user_company_id' => request('user_company_id'),
+            'user_division_id' => request('user_division_id'),
+            'user_position' => request('user_position'),
+            'user_role' => request('user_role'),
+            'user_status' => 'active',
+            'user_profile_url' => isset($image_url) ? $image_url : null,
+            'created_at' => now()->addHours(7),
         ]);
 
         if ($user) {
@@ -150,28 +187,36 @@ class EmployeeController extends Controller
 
     public function detail($id)
     {
-        $data = DB::table('employees')
+        $data = User::query()
             ->select(
-                'employee_id',
-                'employee_code',
-                'employee_name',
-                'employee_address',
-                'employee_identity_address',
-                'employee_identity_number',
-                'employee_npwp',
-                'employee_bpjs_kes',
-                'employee_bpjs_tk',
-                'employee_place_birth',
-                'employee_education_json',
-                'employee_marital_status',
-                'employee_number_children',
-                'employee_emergency_contact',
-                'employee_entry_year',
-                'employee_position',
-                'employee_status',
-                'employee_image'
+                'user_id',
+                'user_code',
+                'email',
+                'user_name',
+                'user_address',
+                'user_identity_address',
+                'user_identity_number',
+                'user_npwp',
+                'user_bpjs_kes',
+                'user_bpjs_tk',
+                'user_place_birth',
+                'user_education_json',
+                'user_marital_status',
+                'user_number_children',
+                'user_phone_number',
+                'user_emergency_contact',
+                'user_entry_year',
+                'user_company_id',
+                'company_name',
+                'user_division_id',
+                'division_name',
+                'user_position',
+                'user_status',
+                'user_profile_url'
             )
-            ->where('employee_id', $id)
+            ->leftJoin('companies', 'user_company_id', '=', 'company_id')
+            ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
+            ->where('user_id', $id)
             ->first();
 
         if ($data) {
@@ -179,7 +224,7 @@ class EmployeeController extends Controller
                 'code' => 200,
                 'status' => 'success',
                 'message' => 'Data ditemukan',
-                'result' => $data,
+                'result' => convertResponseSingle($data),
             ];
         } else {
             $output = [
@@ -195,7 +240,7 @@ class EmployeeController extends Controller
 
     public function update(Request $request, $id)
     {
-        $check_data = Employee::find($id);
+        $check_data = User::find($id);
 
         if (!$check_data) {
             return response()->json([
@@ -207,13 +252,16 @@ class EmployeeController extends Controller
         }
 
         $rules = [
-            'employee_name' => 'required',
-            'employee_status' => 'required|in:active,inactive',
-            'employee_marital_status' => 'in:single,married,divorced',
+            'user_name' => 'required',
+            'email' => 'required|email|unique:users,email,' . $id . ',user_id',
+            'user_company_id' => 'required|integer',
+            'user_division_id' => 'required|integer',
+            'user_status' => 'required|in:active,inactive',
+            'user_marital_status' => 'in:single,married,divorced',
         ];
 
-        if ($request->hasFile('employee_image')) {
-            $rules['employee_image'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
+        if ($request->hasFile('user_profile_url')) {
+            $rules['user_profile_url'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
         }
 
         // Validate the request
@@ -221,20 +269,20 @@ class EmployeeController extends Controller
 
 
         //define validation rules
-        if ($check_data->employee_image !== request()->file('employee_image')) {
-            $validator = Validator::make(request()->all(), [
-                'employee_name' => 'required',
-                'employee_status' => 'required|in:active,inactive',
-                'employee_marital_status' => 'in:single,married,divorced',
-                'employee_image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            ]);
-        } else {
-            $validator = Validator::make(request()->all(), [
-                'employee_name' => 'required',
-                'employee_status' => 'required|in:active,inactive',
-                'employee_marital_status' => 'in:single,married,divorced',
-            ]);
-        }
+        // if ($check_data->user_profile_url !== request()->file('user_profile_url')) {
+        //     $validator = Validator::make(request()->all(), [
+        //         'user_name' => 'required',
+        //         'user_status' => 'required|in:active,inactive',
+        //         'user_marital_status' => 'in:single,married,divorced',
+        //         'user_profile_url' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        //     ]);
+        // } else {
+        //     $validator = Validator::make(request()->all(), [
+        //         'user_name' => 'required',
+        //         'user_status' => 'required|in:active,inactive',
+        //         'user_marital_status' => 'in:single,married,divorced',
+        //     ]);
+        // }
 
         //check if validation fails
         if ($validator->fails()) {
@@ -245,17 +293,17 @@ class EmployeeController extends Controller
             ], 200);
         }
 
-        if ($request->file('employee_image')) {
+        if ($request->file('user_profile_url')) {
             //upload image
-            $image = request()->file('employee_image');
+            $image = request()->file('user_profile_url');
             $image_name = time() . '-' . $image->getClientOriginalName();
-            $image_path = $image->storeAs('images/employees', $image_name, 'public');
+            $image_path = $image->storeAs('images/users', $image_name, 'public');
             $image_url = env('APP_URL'). '/storage/' . $image_path;
 
             // Delete old image if it exists
-            if ($check_data && $check_data->employee_image) {
+            if ($check_data && $check_data->user_profile_url) {
                 // Extract the relative path of the old image from the URL
-                $old_image_path = str_replace(env('APP_URL') . '/storage/', '', $check_data->employee_image);
+                $old_image_path = str_replace(env('APP_URL') . '/storage/', '', $check_data->user_profile_url);
 
                 // Delete the old image
                 Storage::disk('public')->delete($old_image_path);
@@ -263,23 +311,29 @@ class EmployeeController extends Controller
         }
         
         $res = $check_data->update([
-            'employee_name'             => $request->employee_name,
-            'employee_address'          => $request->employee_address,
-            'employee_identity_address' => $request->employee_identity_address,
-            'employee_identity_number'  => $request->employee_identity_number,
-            'employee_npwp'             => $request->employee_npwp,
-            'employee_bpjs_kes'         => $request->employee_bpjs_kes,
-            'employee_bpjs_tk'          => $request->employee_bpjs_tk,
-            'employee_place_birth'      => $request->employee_place_birth,
-            'employee_education_json'   => $request->employee_education_json,
-            'employee_marital_status'   => $request->employee_marital_status,
-            'employee_number_children'  => $request->employee_number_children,
-            'employee_emergency_contact'    => $request->employee_emergency_contact,
-            'employee_entry_year'       => $request->employee_entry_year,
-            'employee_position'         => $request->employee_position,
-            'employee_status'           => $request->employee_status,
-            'employee_image'            => isset($image_url) ? $image_url : $check_data->employee_image,
-            'updated_at'                => date('Y-m-d H:i:s'),
+            'user_name'             => $request->user_name,
+            'email'                 => $request->email,
+            'password'              => isset($request->password) ? Hash::make($request->password) : $check_data->password,
+            'user_address'          => $request->user_address,
+            'user_identity_address' => $request->user_identity_address,
+            'user_identity_number'  => $request->user_identity_number,
+            'user_npwp'             => $request->user_npwp,
+            'user_bpjs_kes'         => $request->user_bpjs_kes,
+            'user_bpjs_tk'          => $request->user_bpjs_tk,
+            'user_place_birth'      => $request->user_place_birth,
+            'user_date_birth'       => $request->user_date_birth,
+            'user_education_json'   => $request->user_education_json,
+            'user_marital_status'   => $request->user_marital_status,
+            'user_number_children'  => $request->user_number_children,
+            'user_emergency_contact'    => $request->user_emergency_contact,
+            'user_entry_year'       => $request->user_entry_year,
+            'user_company_id'       => $request->user_company_id,
+            'user_division_id'      => $request->user_division_id,
+            'user_position'         => $request->user_position,
+            'user_position'         => $request->user_position,
+            'user_status'           => $request->user_status,
+            'user_profile_url'      => isset($image_url) ? $image_url : $check_data->user_profile_url,
+            'updated_at'            => now()->addHours(7),
         ]);
 
         if ($res) {
@@ -303,7 +357,7 @@ class EmployeeController extends Controller
 
     public function delete($id)
     {
-        $check_data = Employee::find($id);
+        $check_data = User::find($id);
 
         if (!$check_data) {
             return response()->json([
@@ -319,7 +373,7 @@ class EmployeeController extends Controller
         
         //soft delete post
         $res = $check_data->update([
-            'deleted_at' => date('Y-m-d H:i:s'),
+            'deleted_at' => now()->addHours(7),
         ]);
 
         if ($res) {
@@ -340,16 +394,6 @@ class EmployeeController extends Controller
 
         return response()->json($output, 200);
 
-    }
-
-    function generate_number()
-    {
-        $sequence = DB::table('employees')->count();
-
-        $sequence = $sequence + 1;
-
-        $number = "LBI" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
-        return $number;
     }
 
     // public function export_excel()

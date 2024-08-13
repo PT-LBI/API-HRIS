@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 // use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+// use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 // use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
-use Tymon\JWTAuth\Facades\JWTAuth;
+// use Tymon\JWTAuth\Facades\JWTAuth;
 // use App\Models\User;
 // use Illuminate\Support\Str;
 
@@ -40,16 +40,28 @@ class AuthController extends Controller
                 'message' => "Anda belum memiliki permission!"
             ], 200);
         } else {
-            $output = [
-                'code'      => 200,
-                'status'    => 'success',
-                'message'   => 'Berhasil Login',
-                'result'     => [
-                    'user'          => auth()->user(),
-                    'data_token'    => $token,
-                    'menu'          => 'menu'
-                ]
-            ];
+            $user = auth()->user();
+
+            // Check if the user has a role of 'finance' or 'superadmin'
+            if (!in_array($user->user_role, ['superadmin','admin','finance','warehouse','owner'])) {
+                return response()->json([
+                    'code' => 403,
+                    'status' => 'Forbidden',
+                    'message' => "Anda tidak memiliki izin untuk login!"
+                ], 403);
+            } else {
+                $output = [
+                    'code'      => 200,
+                    'status'    => 'success',
+                    'message'   => 'Berhasil Login',
+                    'result'     => [
+                        'user'          => convertResponseSingle(auth()->user()),
+                        'data_token'    => $token,
+                        'menu'          => 'menu'
+                    ]
+                ];
+            }
+
         }
 
         return response()->json($output, 200);
@@ -71,7 +83,7 @@ class AuthController extends Controller
         $user = auth()->user();
 
         // Check if the user has a role of 'finance' or 'superadmin'
-        if (!in_array($user->user_role, ['finance', 'superadmin', 'owner'])) {
+        if (!in_array($user->user_role, ['staff'])) {
             return response()->json([
                 'code' => 403,
                 'status' => 'Forbidden',
@@ -84,7 +96,7 @@ class AuthController extends Controller
             'status'    => 'success',
             'message'   => 'Berhasil Login',
             'result'     => [
-                'user'          => auth()->user(),
+                'user'          => convertResponseSingle(auth()->user()),
                 'data_token'    => $token,
             ]
         ];

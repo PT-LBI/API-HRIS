@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Superadmin;
 
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -18,7 +18,7 @@ class ProfileController extends Controller
             'result'     => []
         ];
 			
-        $data = DB::table('users')
+        $data = User::query()
             ->select(
                 'user_id',
                 'email',
@@ -46,7 +46,7 @@ class ProfileController extends Controller
                 'code' => 200,
                 'status' => 'success',
                 'message' => 'Data ditemukan',
-                'result' => $data,
+                'result' => convertResponseSingle($data),
             ];
         } else {
             $output = [
@@ -115,7 +115,7 @@ class ProfileController extends Controller
             'user_npwp'             => $request->user_npwp,
             'user_desc'             => $request->user_desc,
             'user_profile_url'      => isset($image_url) ? $image_url : $check_data->user_profile_url,
-            'updated_at'            => date('Y-m-d H:i:s'),
+            'updated_at'            => now()->addHours(7),
         ]);
 
         if ($res) {

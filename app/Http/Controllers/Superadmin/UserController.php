@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Superadmin;
 
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -31,7 +31,7 @@ class UserController extends Controller
             $search = request()->query('search');
             $role = request()->query('role');
             
-            $query = DB::table('users')
+            $query = User::query()
                 ->select(
                     'user_id',
                     'email',
@@ -71,7 +71,7 @@ class UserController extends Controller
             $res = $query->paginate($limit, ['*'], 'page', $page);
 
             //get total data
-            $queryTotal = DB::table('users')
+            $queryTotal = User::query()
                 ->select('1 as total')
                 ->whereIn('user_role', ['admin', 'finance', 'warehouse', 'owner'])
                 ->where('deleted_at', null);
@@ -84,7 +84,7 @@ class UserController extends Controller
                 'per_page' => $res->perPage(),
                 'total' => $res->total(),
                 'total_all' => $total_all,
-                'data' => $res->items(),
+                'data' => convertResponseArray($res->items()),
             ];
 
             $output = [
@@ -111,7 +111,7 @@ class UserController extends Controller
             'user_name' => 'required',
             'user_role' => 'required|in:admin,finance,warehouse,owner',
             'user_position' => 'required',
-            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'user_profile_url' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -122,17 +122,19 @@ class UserController extends Controller
             ], 200);
         }
 
-        if (request()->file('image')) {
-            $image = request()->file('image');
+        if (request()->file('user_profile_url')) {
+            $image = request()->file('user_profile_url');
             $image_name = time() . '-' . $image->getClientOriginalName();
             $image_path = $image->storeAs('images/users', $image_name, 'public');
             $image_url = env('APP_URL'). '/storage/' . $image_path;
         }
+        $user_code = generateCode();
 
         $data = User::create([
             'email' => request('email'),
             'password' => Hash::make(request('password')),
             'user_name' => request('user_name'),
+            'user_code' => $user_code,
             'user_phone_number' => request('user_phone_number'),
             'user_role' => request('user_role'),
             'user_position' => request('user_position'),
@@ -147,8 +149,8 @@ class UserController extends Controller
             'user_desc' => request('user_desc'),
             'user_status' => 'active',
             'user_join_date' => date('Y-m-d'),
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
+            'created_at' => now()->addHours(7),
+            'updated_at' => null,
         ]);
 
         if ($data) {
@@ -179,7 +181,7 @@ class UserController extends Controller
             'result'     => []
         ];
 			
-        $data = DB::table('users')
+        $data = User::query()
             ->select(
                 'user_id',
                 'email',
@@ -209,7 +211,7 @@ class UserController extends Controller
                 'code' => 200,
                 'status' => 'success',
                 'message' => 'Data ditemukan',
-                'result' => $data,
+                'result' => convertResponseSingle($data),
             ];
         } else {
             $output = [
@@ -237,12 +239,12 @@ class UserController extends Controller
         }
 
         //define validation rules
-        if ($check_data->user_profile_url !== request()->file('image')) {
+        if ($check_data->user_profile_url !== request()->file('user_profile_url')) {
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email|unique:users,email,' . $id . ',user_id',
                 'user_name' => 'required',
                 'user_status' => 'required|in:active,inactive',
-                // 'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                // 'user_profile_url' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ]);
         } else {
             $validator = Validator::make($request->all(), [
@@ -261,9 +263,9 @@ class UserController extends Controller
             ], 200);
         }
 
-        if ($request->file('image')) {
+        if ($request->file('user_profile_url')) {
             //upload image
-            $image = request()->file('image');
+            $image = request()->file('user_profile_url');
             $image_name = time() . '-' . $image->getClientOriginalName();
             $image_path = $image->storeAs('images/users', $image_name, 'public');
             $image_url = env('APP_URL'). '/storage/' . $image_path;
@@ -296,7 +298,7 @@ class UserController extends Controller
             'user_desc'             => $request->user_desc,
             'user_profile_url'      => isset($image_url) ? $image_url : $check_data->user_profile_url,
             'user_status'           => $request->user_status,
-            'updated_at'            => date('Y-m-d H:i:s'),
+            'updated_at'            => now()->addHours(7),
         ]);
 
         if ($res) {
@@ -333,7 +335,7 @@ class UserController extends Controller
 
         //soft delete post
         $res = $check_data->update([
-            'deleted_at'        => date('Y-m-d H:i:s'),
+            'deleted_at'        => now()->addHours(7),
         ]);
 
         if ($res) {

@@ -2,12 +2,17 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\AdminMenuController;
-use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PublicController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Superadmin\UserController;
+use App\Http\Controllers\Superadmin\AdminMenuController;
+use App\Http\Controllers\Superadmin\EmployeeController;
+use App\Http\Controllers\Superadmin\DashboardController;
+use App\Http\Controllers\Superadmin\ProfileController;
+use App\Http\Controllers\Superadmin\CompanyController;
+use App\Http\Controllers\Superadmin\DivisionController;
+use App\Http\Controllers\Superadmin\AnnouncementController;
+use App\Http\Controllers\Superadmin\MasterPayrollController;
+use App\Http\Controllers\Mobile\MyProfileController;
 
 Route::group(['middleware' => 'api'], function () {
     Route::get('check/health', [PublicController::class, 'checkHealth']);
@@ -57,6 +62,38 @@ Route::middleware('auth:api')->group(function() {
         // Route::get('/export_excel', [EmployeeController::class, 'export_excel']);
         // Route::get('/export_pdf', [EmployeeController::class, 'export_pdf']);
     });
+
+    Route::group(['prefix' => 'company'], function () {
+        Route::get('', [CompanyController::class, 'index']);
+        Route::post('/create', [CompanyController::class, 'create']);
+        Route::get('/detail/{id}', [CompanyController::class, 'detail']);
+        Route::patch('/update/{id}', [CompanyController::class, 'update']);
+        Route::delete('/delete/{id}', [CompanyController::class, 'delete']);
+    });
+
+    Route::group(['prefix' => 'division'], function () {
+        Route::get('', [DivisionController::class, 'index']);
+        Route::post('/create', [DivisionController::class, 'create']);
+        Route::get('/detail/{id}', [DivisionController::class, 'detail']);
+        Route::patch('/update/{id}', [DivisionController::class, 'update']);
+        Route::delete('/delete/{id}', [DivisionController::class, 'delete']);
+    });
+
+    Route::group(['prefix' => 'announcement'], function () {
+        Route::get('', [AnnouncementController::class, 'index']);
+        Route::post('/create', [AnnouncementController::class, 'create']);
+        Route::get('/detail/{id}', [AnnouncementController::class, 'detail']);
+        Route::post('/update/{id}', [AnnouncementController::class, 'update']);
+        Route::delete('/delete/{id}', [AnnouncementController::class, 'delete']);
+    });
+    
+    Route::group(['prefix' => 'master_payroll'], function () {
+        Route::get('', [MasterPayrollController::class, 'index']);
+        Route::post('/create', [MasterPayrollController::class, 'create']);
+        Route::get('/detail/{id}', [MasterPayrollController::class, 'detail']);
+        Route::patch('/update/{id}', [MasterPayrollController::class, 'update']);
+        Route::delete('/delete/{id}', [MasterPayrollController::class, 'delete']);
+    });
     
     Route::group(['prefix' => 'dashboard'], function () {
         Route::get('/widget', [DashboardController::class, 'widget']);
@@ -68,6 +105,14 @@ Route::middleware('auth:api')->group(function() {
     Route::group(['prefix' => 'profile'], function () {
         Route::get('', [ProfileController::class, 'index']);
         Route::patch('/update/{id}', [ProfileController::class, 'update']);
+    });
+
+
+    //==========> MOBILE <==========
+
+    Route::group(['prefix' => 'mobile/profile'], function () {
+        Route::get('', [MyProfileController::class, 'index']);
+        Route::patch('/update/{id}', [MyProfileController::class, 'update']);
     });
 
 });

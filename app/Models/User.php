@@ -49,22 +49,36 @@ class User extends Authenticatable implements JWTSubject
         'email',
         'password',
         'user_name',
+        'user_code',
         'user_phone_number',
         'user_role',
         'user_identity_number',
+        'user_identity_address',
         'user_npwp',
+        'user_bpjs_kes',
+        'user_bpjs_tk',
+        'user_place_birth',
+        'user_date_birth',
+        'user_education_json',
+        'user_marital_status',
+        'user_number_children',
+        'user_emergency_contact',
+        'user_entry_year',
+        'user_company_id',
+        'user_division_id',
+        'user_position',
         'user_province_id',
         'user_province_name',
         'user_district_id',
         'user_district_name',
         'user_address',
-        'user_position',
         'user_status',
         'user_profile_url',
         'user_desc',
         'user_join_date',
         'created_at',
         'updated_at',
+        'deleted_at',
     ];
 
     /**
@@ -74,21 +88,12 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $hidden = [
         'password',
-        'remember_token',
-        'api_token',
         'deleted_at',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+    protected $casts = [
+        'created_at' => 'datetime:Y-m-d H:i:s',
+        'updated_at' => 'datetime:Y-m-d H:i:s',
+    ];
+
 }
