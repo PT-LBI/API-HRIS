@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Superadmin;
 
 use Illuminate\Http\Request;
 use App\Models\MasterPayroll;
@@ -21,14 +21,14 @@ class MasterPayrollController extends Controller
         try {
             $page = request()->query('page');
             $limit = request()->query('limit') ?? 10;
-            $sort = request()->query('sort') ?? 'announcement_id';
+            $sort = request()->query('sort') ?? 'payroll_id';
             $dir = request()->query('dir') ?? 'DESC';
             $search = request()->query('search');
             $status = request()->query('status');
             $company_id = request()->query('company_id');
             $division_id = request()->query('division_id');
             
-            $query = DB::table('master_payrolls')
+            $query = MasterPayroll::query()
                 ->select(
                     'payroll_id',
                     'payroll_user_id',
@@ -37,6 +37,7 @@ class MasterPayrollController extends Controller
                     'user_company_id',
                     'company_name',
                     'user_division_id',
+                    'division_name',
                     'payroll_value',
                     'payroll_overtime_hour',
                     'payroll_transport',
@@ -89,7 +90,7 @@ class MasterPayrollController extends Controller
                 'per_page' => $res->perPage(),
                 'total' => $res->total(),
                 'total_all' => $total_all,
-                'data' => $res->items(),
+                'data' => convertResponseArray($res->items()),
             ];
 
             $output = [
@@ -154,6 +155,7 @@ class MasterPayrollController extends Controller
             'payroll_bpjs'          => request('payroll_bpjs'),
             'payroll_status'        => 'active',
             'created_at'            => now()->addHours(7),
+            'updated_at'            => null,
         ]);
 
         if ($data) {
@@ -184,7 +186,7 @@ class MasterPayrollController extends Controller
             'result'     => []
         ];
 			
-        $data = DB::table('master_payrolls')
+        $data = MasterPayroll::query()
             ->select(
                 'payroll_id',
                 'payroll_user_id',
@@ -201,6 +203,7 @@ class MasterPayrollController extends Controller
                 'payroll_bpjs',
                 'payroll_status',
                 'master_payrolls.created_at',
+                'master_payrolls.updated_at',
             )
             ->where('payroll_id', $id)
             ->leftJoin('users', 'master_payrolls.payroll_user_id', '=', 'users.user_id')
@@ -213,7 +216,7 @@ class MasterPayrollController extends Controller
                 'code' => 200,
                 'status' => 'success',
                 'message' => 'Data ditemukan',
-                'result' => $data,
+                'result' => convertResponseSingle($data),
             ];
         } else {
             $output = [
