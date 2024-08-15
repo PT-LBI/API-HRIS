@@ -23,6 +23,7 @@ class Shift extends Model
         'shift_status',
         'created_at',
         'updated_at',
+        'deleted_at'
     ];
 
     protected $hidden = [

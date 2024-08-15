@@ -12,6 +12,8 @@ use App\Http\Controllers\Superadmin\CompanyController;
 use App\Http\Controllers\Superadmin\DivisionController;
 use App\Http\Controllers\Superadmin\AnnouncementController;
 use App\Http\Controllers\Superadmin\MasterPayrollController;
+use App\Http\Controllers\Superadmin\ShiftController;
+use App\Http\Controllers\Superadmin\ScheduleController;
 use App\Http\Controllers\Mobile\MyProfileController;
 
 Route::group(['middleware' => 'api'], function () {
@@ -93,6 +95,22 @@ Route::middleware('auth:api')->group(function() {
         Route::get('/detail/{id}', [MasterPayrollController::class, 'detail']);
         Route::patch('/update/{id}', [MasterPayrollController::class, 'update']);
         Route::delete('/delete/{id}', [MasterPayrollController::class, 'delete']);
+    });
+    
+    Route::group(['prefix' => 'shift'], function () {
+        Route::get('', [ShiftController::class, 'index']);
+        Route::post('/create', [ShiftController::class, 'create']);
+        Route::get('/detail/{id}', [ShiftController::class, 'detail']);
+        Route::patch('/update/{id}', [ShiftController::class, 'update']);
+        Route::delete('/delete/{id}', [ShiftController::class, 'delete']);
+    });
+    
+    Route::group(['prefix' => 'schedule'], function () {
+        Route::get('', [ScheduleController::class, 'index']);
+        Route::post('/create', [ScheduleController::class, 'create']);
+        Route::get('/detail/{id}', [ScheduleController::class, 'detail']);
+        Route::patch('/update/{id}', [ScheduleController::class, 'update']);
+        Route::delete('/delete/{id}', [ScheduleController::class, 'delete']);
     });
     
     Route::group(['prefix' => 'dashboard'], function () {

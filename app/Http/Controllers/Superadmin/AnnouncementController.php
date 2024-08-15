@@ -201,13 +201,13 @@ class AnnouncementController extends Controller
             $image_url = env('APP_URL'). '/storage/' . $image_path;
 
             // Delete old image if it exists
-            if ($check_data && $check_data->user_profile_url) {
-                // Extract the relative path of the old image from the URL
-                $old_image_path = str_replace(env('APP_URL') . '/storage/', '', $check_data->announcement_image);
+            // if ($check_data && $check_data->user_profile_url) {
+            //     // Extract the relative path of the old image from the URL
+            //     $old_image_path = str_replace(env('APP_URL') . '/storage/', '', $check_data->announcement_image);
 
-                // Delete the old image
-                Storage::disk('public')->delete($old_image_path);
-            }
+            //     // Delete the old image
+            //     Storage::disk('public')->delete($old_image_path);
+            // }
 
         }
        
