@@ -5,10 +5,10 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 
 Route::get('/', function () {
-    return view('welcome');
-}); 
+    app('session')->put('disable_notifications', true);
+    app('session')->get('disable_notifications');
+    session(['disable_notifications' => true]);
+    session('disable_notifications');
 
-Route::get('/posts', function () {
-    dd('hello world wkwk');
+    return view('welcome');
 });
-Route::get('/user', [UserController::class, 'index']);

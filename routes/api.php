@@ -14,7 +14,11 @@ use App\Http\Controllers\Superadmin\AnnouncementController;
 use App\Http\Controllers\Superadmin\MasterPayrollController;
 use App\Http\Controllers\Superadmin\ShiftController;
 use App\Http\Controllers\Superadmin\ScheduleController;
+use App\Http\Controllers\Superadmin\LeaveController;
 use App\Http\Controllers\Mobile\MyProfileController;
+use App\Http\Controllers\Mobile\MyAnnouncementController;
+use App\Http\Controllers\Mobile\MyScheduleController;
+use App\Http\Controllers\Mobile\MyLeaveController;
 
 Route::group(['middleware' => 'api'], function () {
     Route::get('check/health', [PublicController::class, 'checkHealth']);
@@ -112,6 +116,12 @@ Route::middleware('auth:api')->group(function() {
         Route::patch('/update/{id}', [ScheduleController::class, 'update']);
         Route::delete('/delete/{id}', [ScheduleController::class, 'delete']);
     });
+
+    Route::group(['prefix' => 'leave'], function () {
+        Route::get('', [LeaveController::class, 'index']);
+        Route::get('/detail/{id}', [LeaveController::class, 'detail']);
+        Route::patch('/update/{id}', [LeaveController::class, 'update']);
+    });
     
     Route::group(['prefix' => 'dashboard'], function () {
         Route::get('/widget', [DashboardController::class, 'widget']);
@@ -131,6 +141,21 @@ Route::middleware('auth:api')->group(function() {
     Route::group(['prefix' => 'mobile/profile'], function () {
         Route::get('', [MyProfileController::class, 'index']);
         Route::patch('/update/{id}', [MyProfileController::class, 'update']);
+    });
+
+    Route::group(['prefix' => 'mobile/announcement'], function () {
+        Route::get('', [MyAnnouncementController::class, 'index']);
+        Route::get('/detail/{id}', [MyAnnouncementController::class, 'detail']);
+    });
+   
+    Route::group(['prefix' => 'mobile/leave'], function () {
+        Route::get('', [MyLeaveController::class, 'index']);
+        Route::post('/create', [MyLeaveController::class, 'create']);
+        Route::get('/detail/{id}', [MyLeaveController::class, 'detail']);
+    });
+
+    Route::group(['prefix' => 'mobile/schedule'], function () {
+        Route::get('', [MyScheduleController::class, 'index']);
     });
 
 });

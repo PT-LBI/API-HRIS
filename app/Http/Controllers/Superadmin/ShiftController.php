@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Superadmin;
 
 use Illuminate\Http\Request;
 use App\Models\Shift;
-use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
 class ShiftController extends Controller

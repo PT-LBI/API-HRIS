@@ -262,7 +262,7 @@ class ScheduleController extends Controller
                 'code'      => 200,
                 'status'    => 'success',
                 'message'   => 'Berhasil mengubah data',
-                'result'     => $check_data
+                'result'     => convertResponseSingle($check_data)
             ];
         } else {
             $output = [
