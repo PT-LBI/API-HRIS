@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Schedule extends Model
+class LeaveDetail extends Model
 {
     use HasFactory;
-    protected $table = 'schedules';
-    protected $primaryKey = 'schedule_id';
+    protected $table = 'leave_details';
+    protected $primaryKey = 'leave_detail_id';
 
     /**
      * The attributes that are mass assignable.
@@ -17,15 +17,11 @@ class Schedule extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'schedule_shift_id',
-        'schedule_user_id',
-        'schedule_date',
-        'schedule_note',
-        'schedule_status',
-        'schedule_leave_id',
+        'leave_detail_leave_id',
+        'leave_detail_date',
         'created_at',
         'updated_at',
-        'deleted_at',
+        'deleted_at'
     ];
 
     protected $hidden = [

@@ -21,6 +21,7 @@ class Leave extends Model
         'leave_type',
         'leave_start_date',
         'leave_end_date',
+        'leave_day',
         'leave_desc',
         'leave_image',
         'leave_status',

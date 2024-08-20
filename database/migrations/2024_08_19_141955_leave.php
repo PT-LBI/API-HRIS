@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('leave_type', 20)->default('leave')->index();
             $table->date('leave_start_date')->index();
             $table->date('leave_end_date')->nullable()->index();
+            $table->int('leave_day')->default(0);
             $table->text('leave_desc')->nullable();
             $table->text('leave_image')->nullable();
             $table->string('leave_status', 20)->default('waiting')->index();

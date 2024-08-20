@@ -47,6 +47,7 @@ return new class extends Migration
             $table->date('schedule_date')->index();
             $table->text('schedule_note')->nullable();
             $table->string('schedule_status')->default('active');
+            $table->integer('schedule_leave_id')->default(0)->index();
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
             $table->timestamp('deleted_at')->nullable();

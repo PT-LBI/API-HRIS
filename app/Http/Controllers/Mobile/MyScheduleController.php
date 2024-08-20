@@ -30,10 +30,14 @@ class MyScheduleController extends Controller
             'schedule_date',
             'schedule_note',
             'schedule_status',
+            'schedule_leave_id',
+            'leave_type',
+            'leave_desc',
             'schedules.created_at',
         )
         ->where('schedule_date', $date)
         ->leftJoin('shifts', 'shift_id', '=', 'schedule_shift_id')
+        ->leftJoin('leave', 'leave_id', '=', 'schedule_leave_id')
         ->first();
 
         $output = [

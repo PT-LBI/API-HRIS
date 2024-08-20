@@ -86,7 +86,8 @@ class ScheduleController extends Controller
             $schedule = Schedule::where('schedule_user_id', $userId)
                 ->whereDate('schedule_date', $date)
                 ->leftjoin('shifts', 'shift_id', '=', 'schedule_shift_id')
-                ->select('schedules.*', 'shift_name')
+                ->leftjoin('leave', 'leave_id', '=', 'schedule_leave_id')
+                ->select('schedules.*', 'shift_name', 'leave_type', 'leave_desc')
                 ->first();
 
             return [
@@ -94,6 +95,9 @@ class ScheduleController extends Controller
                 'schedule_date' => $date,
                 'shift_id' => $schedule ? $schedule->schedule_shift_id : 0,
                 'shift_name' => $schedule ? $schedule->shift_name : 'Pilih jadwal',
+                'leave_id' => $schedule ? $schedule->schedule_leave_id : 0,
+                'leave_type' => $schedule ? $schedule->leave_type : '',
+                'leave_desc' => $schedule ? $schedule->leave_desc : '',
             ];
         })->toArray();
     }
@@ -201,12 +205,16 @@ class ScheduleController extends Controller
             'schedule_user_id',
             'schedule_date',
             'schedule_note',
+            'schedule_leave_id',
+            'leave_type',
+            'leave_desc',
             'schedule_status',
             'schedules.created_at',
             'schedules.updated_at',
         )
         ->where('schedule_user_id', $user_id)
         ->leftJoin('shifts', 'shift_id', '=', 'schedule_shift_id')
+        ->leftJoin('leave', 'leave_id', '=', 'schedule_leave_id')
         ->get()->toArray();
 
         $data = [

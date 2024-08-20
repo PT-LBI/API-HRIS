@@ -4,8 +4,9 @@ namespace App\Http\Controllers\mobile;
 
 use App\Http\Controllers\Controller;
 use App\Models\Leave;
+use App\Models\LeaveDetail;
 use Illuminate\Support\Facades\Validator;
-// use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class MyLeaveController extends Controller
 {
@@ -33,6 +34,7 @@ class MyLeaveController extends Controller
                     'leave_type',
                     'leave_start_date',
                     'leave_end_date',
+                    'leave_day',
                     'leave_status',
                     'leave_desc',
                 )
@@ -110,32 +112,58 @@ class MyLeaveController extends Controller
             $image_url = env('APP_URL'). '/storage/' . $image_path;
         }
 
-        $data = Leave::create([
-            'leave_user_id'     => auth()->user()->user_id,
-            'leave_type'        => request('leave_type'),
-            'leave_start_date'  => request('leave_start_date'),
-            'leave_end_date'    => request('leave_end_date '),
-            'leave_desc'        => request('leave_desc'),
-            'leave_image'       => isset($image_url) ? $image_url : null,
-            'leave_status'      => 'waiting',
-            'created_at'        => now()->addHours(7),
-            'updated_at'        => null,
-        ]);
 
-        if ($data) {
+        try {
+            DB::beginTransaction();
+
+            $start = strtotime(request('leave_start_date'));
+            $end = strtotime(request('leave_end_date'));
+            $days = ceil(abs($end - $start) / 86400) + 1;
+
+            $data = Leave::create([
+                'leave_user_id'     => auth()->user()->user_id,
+                'leave_type'        => request('leave_type'),
+                'leave_start_date'  => request('leave_start_date'),
+                'leave_end_date'    => request('leave_end_date'),
+                'leave_day'         => $days,
+                'leave_desc'        => request('leave_desc'),
+                'leave_image'       => isset($image_url) ? $image_url : null,
+                'leave_status'      => 'waiting',
+                'created_at'        => now()->addHours(7),
+                'updated_at'        => null,
+            ]);
+
+            if (request('leave_end_date')) {
+                for ($i = 0; $i < $days; $i++) {
+                    LeaveDetail::create([
+                        'leave_detail_leave_id' => $data->leave_id,
+                        'leave_detail_date' => date('Y-m-d', strtotime(request('leave_start_date') . ' + ' . $i . ' days')),
+                        'created_at' => now()->addHours(7),
+                        'updated_at' => null,
+                    ]);
+                }
+            } else {
+                LeaveDetail::create([
+                    'leave_detail_leave_id' => $data->leave_id,
+                    'leave_detail_date' => request('leave_start_date'),
+                    'created_at' => now()->addHours(7),
+                    'updated_at' => null,
+                ]);
+            }
+
+            DB::commit();
             $output = [
                 'code'      => 200,
                 'status'    => 'success',
                 'message'   => 'Berhasil menambahkan data',
                 'result'     => []
             ];
-        } else {
-            $output = [
-                'code'      => 500,
-                'status'    => 'error',
-                'message'   => 'Gagal menambahkan data',
-                'result'     => []
-            ];
+           
+        } catch (Exception $e) {
+            DB::rollBack();
+            $output['code'] = 500;
+            $output['message'] = $output['message'];
+            // $output['message'] = $e->getMessage();
         }
 
         return response()->json($output, 200);
@@ -161,6 +189,7 @@ class MyLeaveController extends Controller
             'leave_type',
             'leave_start_date',
             'leave_end_date',
+            'leave_day',
             'leave_status',
             'leave_desc',
             'leave_image',
