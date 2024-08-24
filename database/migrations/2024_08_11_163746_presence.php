@@ -14,15 +14,13 @@ return new class extends Migration
         Schema::create('presence', function (Blueprint $table) {
             $table->id('presence_id')->primary();
             $table->integer('presence_user_id')->index();
-            $table->integer('presence_shift_id')->index();
-            $table->timestamp('presence_in')->nullable();
+            $table->integer('presence_schedule_id')->index();
+            $table->timestamp('presence_in_time')->nullable();
             $table->text('presence_in_photo')->nullable();
-            $table->timestamp('presence_out')->nullable();
+            $table->timestamp('presence_out_time')->nullable();
             $table->text('presence_out_photo')->nullable();
             $table->time('presence_extra_time')->nullable();
             $table->string('presence_status', 20)->nullable();
-            $table->string('presence_longitude')->nullable();
-            $table->string('presence_latitude')->nullable();
             $table->decimal('presence_max_distance', 2)->default(0);
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();

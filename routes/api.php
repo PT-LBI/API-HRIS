@@ -15,10 +15,12 @@ use App\Http\Controllers\Superadmin\MasterPayrollController;
 use App\Http\Controllers\Superadmin\ShiftController;
 use App\Http\Controllers\Superadmin\ScheduleController;
 use App\Http\Controllers\Superadmin\LeaveController;
+use App\Http\Controllers\Superadmin\PresenceController;
 use App\Http\Controllers\Mobile\MyProfileController;
 use App\Http\Controllers\Mobile\MyAnnouncementController;
 use App\Http\Controllers\Mobile\MyScheduleController;
 use App\Http\Controllers\Mobile\MyLeaveController;
+use App\Http\Controllers\Mobile\MyPresenceController;
 
 Route::group(['middleware' => 'api'], function () {
     Route::get('check/health', [PublicController::class, 'checkHealth']);
@@ -123,6 +125,11 @@ Route::middleware('auth:api')->group(function() {
         Route::patch('/update/{id}', [LeaveController::class, 'update']);
     });
     
+    Route::group(['prefix' => 'presence'], function () {
+        Route::get('', [PresenceController::class, 'index']);
+        Route::get('/detail/{id}', [PresenceController::class, 'detail']);
+    });
+    
     Route::group(['prefix' => 'dashboard'], function () {
         Route::get('/widget', [DashboardController::class, 'widget']);
         Route::get('/stock_warning', [DashboardController::class, 'stock_warning']);
@@ -156,6 +163,11 @@ Route::middleware('auth:api')->group(function() {
 
     Route::group(['prefix' => 'mobile/schedule'], function () {
         Route::get('', [MyScheduleController::class, 'index']);
+    });
+  
+    Route::group(['prefix' => 'mobile/presence'], function () {
+        Route::get('', [MyPresenceController::class, 'index']);
+        Route::post('/create', [MyPresenceController::class, 'create']);
     });
 
 });

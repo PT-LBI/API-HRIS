@@ -18,16 +18,20 @@ class Presence extends Model
      */
     protected $fillable = [
         'presence_user_id',
-        'presence_shift_id',
-        'presence_in',
+        'presence_schedule_id',
+        'presence_in_time',
         'presence_in_photo',
-        'presence_out',
+        'presence_out_time',
         'presence_out_photo',
         'presence_extra_time',
         'presence_status',
-        'presence_longitude',
-        'presence_latitude',
+        'presence_in_longitude',
+        'presence_in_latitude',
+        'presence_out_longitude',
+        'presence_out_latitude',
         'presence_max_distance',
+        'presence_in_note',
+        'presence_out_note',
         'created_at',
         'updated_at',
     ];
@@ -38,8 +42,8 @@ class Presence extends Model
 
     protected $casts = [
         'presence_max_distance' => 'float',
-        'presence_in' => 'datetime:Y-m-d H:i:s',
-        'presence_out' => 'datetime:Y-m-d H:i:s',
+        'presence_in_time' => 'datetime:Y-m-d H:i:s',
+        'presence_out_time' => 'datetime:Y-m-d H:i:s',
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];

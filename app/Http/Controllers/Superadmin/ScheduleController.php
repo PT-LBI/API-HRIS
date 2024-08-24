@@ -131,6 +131,15 @@ class ScheduleController extends Controller
             ], 200);
         }
 
+        if (request('schedule_date') < now()->toDateString()) {
+            return response()->json([
+                'code' => 500,
+                'status' => 'error',
+                'message' => 'Tanggal tidak boleh kurang dari hari ini',
+                'result' => []
+            ], 200);
+        }
+
         $check_schedule = $this->checkSchedule(request('schedule_user_id'), request('schedule_date'));
 
         if ($check_schedule === false) {
@@ -141,7 +150,7 @@ class ScheduleController extends Controller
                 'result' => []
             ], 200);
         }
-        
+
         $data = Schedule::create([
             'schedule_user_id'  => request('schedule_user_id'),
             'schedule_shift_id' => !empty(request('schedule_shift_id')) ? request('schedule_shift_id') : 0,
@@ -244,6 +253,15 @@ class ScheduleController extends Controller
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
             ], 200);
+        } else {
+            if ($check_data->schedule_date < now()->toDateString()) {
+                return response()->json([
+                    'code' => 500,
+                    'status' => 'error',
+                    'message' => 'Jadwal yang sudah berlalu tidak bisa diubah',
+                    'result' => []
+                ], 200);
+            }
         }
 
         $validator = Validator::make($request->all(), [
