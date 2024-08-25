@@ -87,22 +87,14 @@ class MyAnnouncementController extends Controller
             ->where('announcement_id', $id)
             ->first();
 
-        if ($data) {
 
-            $output = [
-                'code' => 200,
-                'status' => 'success',
-                'message' => 'Data ditemukan',
-                'result' => convertResponseSingle($data),
-            ];
-        } else {
-            $output = [
-                'code' => 500,
-                'status' => 'error',
-                'message' => 'Data tidak ditemukan',
-                'result' => [],
-            ];
-        }
+        $output = [
+            'code' => 200,
+            'status' => 'success',
+            'message' => 'Data ditemukan',
+            'result' => $data ? convertResponseSingle($data) : '',
+        ];
+       
 
         return response()->json($output, 200);
     }

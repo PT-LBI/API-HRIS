@@ -143,14 +143,14 @@ class AnnouncementController extends Controller
                 'code' => 200,
                 'status' => 'success',
                 'message' => 'Data ditemukan',
-                'result' => convertResponseSingle($data),
+                'result' => $data ? convertResponseSingle($data) : '',
             ];
         } else {
             $output = [
                 'code' => 500,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
-                'result' => [],
+                'result' => '',
             ];
         }
 

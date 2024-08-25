@@ -52,7 +52,7 @@ class MyProfileController extends Controller
                 'code' => 500,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
-                'result' => [],
+                'result' => '',
             ];
         }
 

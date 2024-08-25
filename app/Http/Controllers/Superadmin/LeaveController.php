@@ -143,7 +143,7 @@ class LeaveController extends Controller
             'code' => 200,
             'status' => 'success',
             'message' => 'Data ditemukan',
-            'result' => convertResponseSingle($data),
+            'result' => $data ? convertResponseSingle($data) : '',
         ];
 
         return response()->json($output, 200);
