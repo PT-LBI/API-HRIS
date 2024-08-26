@@ -15,7 +15,7 @@ if (!function_exists('convertResponseSingle')) {
     function convertResponseSingle($data)
     {
         return collect($data)->map(function ($value) {
-            return $value === null ? '' : $value;
+            return $value === null ? new \stdClass() : $value;
         });
     }
 }

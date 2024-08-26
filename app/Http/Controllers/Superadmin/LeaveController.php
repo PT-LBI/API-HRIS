@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Leave;
 use App\Models\LeaveDetail;
 use App\Models\Schedule;
+use App\Models\LogNotif;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
@@ -143,7 +144,7 @@ class LeaveController extends Controller
             'code' => 200,
             'status' => 'success',
             'message' => 'Data ditemukan',
-            'result' => $data ? convertResponseSingle($data) : '',
+            'result' => $data ? convertResponseSingle($data) : new \stdClass(),
         ];
 
         return response()->json($output, 200);
@@ -185,6 +186,47 @@ class LeaveController extends Controller
     
             if ($request->leave_status == 'approved') {
                 $this->create_schedule($check_data);
+            }
+
+            if ($check_data['leave_user_id'] && auth()->user()->user_fcm_token) {
+                $title = $request->leave_status == 'approved' ? 'Disetujui' : 'Ditolak';
+                $msg = $request->leave_status == 'approved' ? 
+                    'Selamat, pengajuan cuti Anda telah disetujui.' : 
+                    'Maaf, pengajuan cuti Anda telah ditolak.';
+
+                // Prepare notification data
+                $dataNotif = [
+                    'type' => 'leave',
+                    'icon' => '',
+                    'title' => "Pengajuan Cuti {$title}",
+                    'body' => "{$msg}",
+                    'sound' => 'default',
+                    'data' => [
+                        'id' => $id,
+                        'code' => 'leave',
+                        'title' => "Pengajuan Cuti {$title}",
+                        'msg' => $msg,
+                        'image_url' => ''
+                    ]
+                ];
+            
+                // Send notification using a helper or service
+                $isSend = sendNotif([
+                    'priority' => 'high',
+                    'notification' => $dataNotif,
+                    'to' => $user->user_fcm_token
+                ]);
+            
+                // If notification is successfully sent, insert into the notification log
+                if ($isSend && $isSend['success'] == 1) {
+                    $insertNotif = [
+                        'log_notif_user_id' => $check_data['leave_user_id'],
+                        'log_notif_data_json' => json_encode($dataNotif),
+                        'log_notif_is_read' => 0
+                    ];
+            
+                    LogNotif::create($insertNotif);
+                }
             }
 
             DB::commit();

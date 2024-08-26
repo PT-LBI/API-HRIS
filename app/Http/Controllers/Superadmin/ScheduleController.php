@@ -227,7 +227,7 @@ class ScheduleController extends Controller
         ->get()->toArray();
 
         $data = [
-            'user' => $data_user ? convertResponseSingle($data_user) : '',
+            'user' => $data_user ? convertResponseSingle($data_user) : new \stdClass(),
             'schedule' => convertResponseArray($data_schedule),
         ];
 
