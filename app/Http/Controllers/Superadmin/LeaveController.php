@@ -188,10 +188,11 @@ class LeaveController extends Controller
                 $this->create_schedule($check_data);
             }
 
-            if ($check_data['leave_user_id'] && auth()->user()->user_fcm_token) {
+            // if ($check_data['leave_user_id'] && auth()->user()->user_fcm_token) {
+            if ($check_data['leave_user_id']) {
                 $title = $request->leave_status == 'approved' ? 'Disetujui' : 'Ditolak';
                 $msg = $request->leave_status == 'approved' ? 
-                    'Selamat, pengajuan cuti Anda telah disetujui.' : 
+                    'Selamat, pengajuan cuti Anda telah disetujui.' :
                     'Maaf, pengajuan cuti Anda telah ditolak.';
 
                 // Prepare notification data
@@ -211,22 +212,24 @@ class LeaveController extends Controller
                 ];
             
                 // Send notification using a helper or service
-                $isSend = sendNotif([
-                    'priority' => 'high',
-                    'notification' => $dataNotif,
-                    'to' => $user->user_fcm_token
-                ]);
+                // $isSend = sendNotif([
+                //     'priority' => 'high',
+                //     'notification' => $dataNotif,
+                //     'to' => $user->user_fcm_token
+                // ]);
             
                 // If notification is successfully sent, insert into the notification log
-                if ($isSend && $isSend['success'] == 1) {
+                // if ($isSend && $isSend['success'] == 1) {
                     $insertNotif = [
-                        'log_notif_user_id' => $check_data['leave_user_id'],
-                        'log_notif_data_json' => json_encode($dataNotif),
-                        'log_notif_is_read' => 0
+                        'log_notif_user_id'     => $check_data['leave_user_id'],
+                        'log_notif_data_json'   => json_encode($dataNotif),
+                        'log_notif_is_read'     => 0,
+                        'created_at'            => now()->addHours(7),
+                        'updated_at'            => null,
                     ];
             
                     LogNotif::create($insertNotif);
-                }
+                // }
             }
 
             DB::commit();

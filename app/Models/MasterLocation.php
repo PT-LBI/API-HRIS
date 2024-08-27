@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class LogNotif extends Model
+class MasterLocation extends Model
 {
     use HasFactory;
-    protected $table = 'log_notif';
-    protected $primaryKey = 'log_notif_id';
+    protected $table = 'master_locations';
+    protected $primaryKey = 'location_id';
 
     /**
      * The attributes that are mass assignable.
@@ -17,11 +17,17 @@ class LogNotif extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'log_notif_user_id',
-        'log_notif_data_json',
-        'log_notif_is_read',
+        'location_name',
+        'location_longitude',
+        'location_latitude',
+        'location_radius',
         'created_at',
         'updated_at',
+        'deleted_at',
+    ];
+
+    protected $hidden = [
+        'deleted_at',
     ];
 
     protected $casts = [

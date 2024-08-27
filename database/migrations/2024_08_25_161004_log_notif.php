@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('log_notif_data_json');
             $table->tinyInteger('log_notif_is_read')->index();
             $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
         });
     }
 

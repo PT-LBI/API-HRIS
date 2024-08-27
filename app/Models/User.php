@@ -72,6 +72,7 @@ class User extends Authenticatable implements JWTSubject
         'user_district_id',
         'user_district_name',
         'user_address',
+        'user_location_id',
         'user_status',
         'user_profile_url',
         'user_desc',

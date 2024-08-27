@@ -5,6 +5,7 @@ namespace App\Http\Controllers\mobile;
 use App\Http\Controllers\Controller;
 use App\Models\Leave;
 use App\Models\LeaveDetail;
+use App\Models\LogNotif;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
@@ -61,7 +62,8 @@ class MyLeaveController extends Controller
             //get total data
             $queryTotal = Leave::query()
                 ->select('1 as total')
-                ->where('deleted_at', null);
+                ->where('deleted_at', null)
+                ->where('log_notif_user_id', auth()->user()->user_id);
             $total_all = $queryTotal->count();
 
             $data = [
@@ -155,6 +157,18 @@ class MyLeaveController extends Controller
                     'updated_at' => null,
                 ]);
             }
+
+            LogNotif::create([
+                'log_notif_user_id' => auth()->user()->user_id,
+                'log_notif_data_json' => json_encode([
+                    'title' => 'Pengajuan Cuti',
+                    'message' => 'Pengajuan cuti berhasil diajukan',
+                    'type' => 'leave',
+                    'data' => $data,
+                ]),
+                'log_notif_is_read' => 0,
+                'created_at' => now()->addHours(7),
+            ]);
 
             DB::commit();
             $output = [

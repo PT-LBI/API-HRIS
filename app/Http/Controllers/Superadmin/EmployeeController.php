@@ -48,11 +48,14 @@ class EmployeeController extends Controller
                     'company_name',
                     'user_division_id',
                     'division_name',
+                    'user_location_id',
+                    'location_name',
                     'user_status',
                     'users.created_at',
                 )
                 ->leftJoin('companies', 'user_company_id', '=', 'company_id')
                 ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
+                ->leftJoin('master_locations', 'user_location_id', '=', 'location_id')
                 ->where('user_role', 'staff')
                 ->where('users.deleted_at', null);
 
@@ -82,8 +85,11 @@ class EmployeeController extends Controller
             //get total data
             $queryTotal = User::query()
                 ->select('1 as total')
+                ->leftJoin('companies', 'user_company_id', '=', 'company_id')
+                ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
+                ->leftJoin('master_locations', 'user_location_id', '=', 'location_id')
                 ->where('user_role', 'staff')
-                ->where('deleted_at', null);
+                ->where('users.deleted_at', null);
             $total_all = $queryTotal->count();
 
             $response = [
@@ -121,6 +127,7 @@ class EmployeeController extends Controller
             'user_company_id' => 'required|integer',
             'user_division_id' => 'required|integer',
             'user_role' => 'required',
+            'user_location_id' => 'required',
             'user_profile_url' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
@@ -160,6 +167,7 @@ class EmployeeController extends Controller
             'user_company_id' => request('user_company_id'),
             'user_division_id' => request('user_division_id'),
             'user_position' => request('user_position'),
+            'user_location_id' => request('user_location_id'),
             'user_role' => request('user_role'),
             'user_status' => 'active',
             'user_profile_url' => isset($image_url) ? $image_url : null,
@@ -211,11 +219,14 @@ class EmployeeController extends Controller
                 'user_division_id',
                 'division_name',
                 'user_position',
+                'user_location_id',
+                'location_name',
                 'user_status',
                 'user_profile_url'
             )
             ->leftJoin('companies', 'user_company_id', '=', 'company_id')
             ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
+            ->leftJoin('master_locations', 'user_location_id', '=', 'location_id')
             ->where('user_id', $id)
             ->first();
 
@@ -256,6 +267,7 @@ class EmployeeController extends Controller
             'email' => 'required|email|unique:users,email,' . $id . ',user_id',
             'user_company_id' => 'required|integer',
             'user_division_id' => 'required|integer',
+            'user_location_id' => 'required|integer',
             'user_status' => 'required|in:active,inactive',
             'user_marital_status' => 'in:single,married,divorced',
         ];
@@ -330,7 +342,7 @@ class EmployeeController extends Controller
             'user_company_id'       => $request->user_company_id,
             'user_division_id'      => $request->user_division_id,
             'user_position'         => $request->user_position,
-            'user_position'         => $request->user_position,
+            'user_location_id'      => $request->user_location_id,
             'user_status'           => $request->user_status,
             'user_profile_url'      => isset($image_url) ? $image_url : $check_data->user_profile_url,
             'updated_at'            => now()->addHours(7),
@@ -341,7 +353,7 @@ class EmployeeController extends Controller
                 'code'      => 200,
                 'status'    => 'success',
                 'message'   => 'Berhasil mengubah data',
-                'result'     => $check_data
+                'result'     => convertResponseSingle($check_data)
             ];
         } else {
             $output = [

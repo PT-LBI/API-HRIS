@@ -30,9 +30,7 @@ class Leave extends Model
         'deleted_at'
     ];
 
-    protected $hidden = [
-        'deleted_at',
-    ];
+  
 
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',

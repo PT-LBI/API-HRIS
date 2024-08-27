@@ -49,11 +49,14 @@ class UserController extends Controller
                     'user_district_id',
                     'user_district_name',
                     'user_address',
-                    'created_at',
-                    'updated_at'
+                    'user_location_id',
+                    'location_name',
+                    'users.created_at',
+                    'users.updated_at'
                 )
                 ->whereIn('user_role', ['admin', 'finance', 'warehouse', 'owner'])
-                ->where('deleted_at', null);
+                ->where('users.deleted_at', null)
+                ->leftJoin('master_locations', 'user_location_id', '=', 'location_id');
             
             if (!empty($search)) {
                 $query->where(function ($query) use ($search) {
@@ -74,7 +77,8 @@ class UserController extends Controller
             $queryTotal = User::query()
                 ->select('1 as total')
                 ->whereIn('user_role', ['admin', 'finance', 'warehouse', 'owner'])
-                ->where('deleted_at', null);
+                ->where('users.deleted_at', null)
+                ->leftJoin('master_locations', 'user_location_id', '=', 'location_id');;
             $total_all = $queryTotal->count();
 
             $data = [
@@ -111,6 +115,7 @@ class UserController extends Controller
             'user_name' => 'required',
             'user_role' => 'required|in:admin,finance,warehouse,owner',
             'user_position' => 'required',
+            'user_location_id' => 'required',
             'user_profile_url' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
@@ -146,6 +151,7 @@ class UserController extends Controller
             'user_identity_number' => request('user_identity_number'),
             'user_npwp' => request('user_npwp'),
             'user_profile_url' => isset($image_url) ? $image_url : null,
+            'user_location_id' => request('user_location_id'),
             'user_desc' => request('user_desc'),
             'user_status' => 'active',
             'user_join_date' => date('Y-m-d'),
@@ -199,10 +205,13 @@ class UserController extends Controller
                 'user_district_name',
                 'user_address',
                 'user_profile_url',
+                'user_location_id',
+                'location_name',
                 'user_desc',
-                'created_at',
-                'updated_at'
+                'users.created_at',
+                'users.updated_at'
             )
+            ->leftJoin('master_locations', 'user_location_id', '=', 'location_id')
             ->where('user_id', $id)
             ->first();
 
@@ -243,6 +252,7 @@ class UserController extends Controller
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email|unique:users,email,' . $id . ',user_id',
                 'user_name' => 'required',
+                'user_location_id' => 'required',
                 'user_status' => 'required|in:active,inactive',
                 // 'user_profile_url' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ]);
@@ -250,6 +260,7 @@ class UserController extends Controller
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email|unique:users,email,' . $id . ',user_id',
                 'user_name' => 'required',
+                'user_location_id' => 'required',
                 'user_status' => 'required|in:active,inactive',
             ]);
         }
@@ -295,6 +306,7 @@ class UserController extends Controller
             'user_address'          => $request->user_address,
             'user_identity_number'  => $request->user_identity_number,
             'user_npwp'             => $request->user_npwp,
+            'user_location_id'      => $request->user_location_id,
             'user_desc'             => $request->user_desc,
             'user_profile_url'      => isset($image_url) ? $image_url : $check_data->user_profile_url,
             'user_status'           => $request->user_status,
