@@ -117,8 +117,13 @@ class MyLeaveController extends Controller
             DB::beginTransaction();
 
             $start = strtotime(request('leave_start_date'));
-            $end = strtotime(request('leave_end_date'));
-            $days = ceil(abs($end - $start) / 86400) + 1;
+            if (request('leave_end_date')){
+                $end = strtotime(request('leave_end_date'));
+                $days = ceil(abs($end - $start) / 86400) + 1;
+            } else {
+                $end = null;
+                $days = 1;
+            }
 
             $data = Leave::create([
                 'leave_user_id'     => auth()->user()->user_id,
