@@ -117,6 +117,7 @@ Route::middleware('auth:api')->group(function() {
     Route::group(['prefix' => 'schedule'], function () {
         Route::get('', [ScheduleController::class, 'index']);
         Route::post('/create', [ScheduleController::class, 'create']);
+        Route::post('/create_bulk', [ScheduleController::class, 'create_bulk']);
         Route::get('/detail/{id}', [ScheduleController::class, 'detail']);
         Route::patch('/update/{id}', [ScheduleController::class, 'update']);
         Route::delete('/delete/{id}', [ScheduleController::class, 'delete']);

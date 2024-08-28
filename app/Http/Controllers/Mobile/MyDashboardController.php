@@ -8,12 +8,13 @@ use App\Models\Schedule;
 use App\Models\User;
 use App\Models\Presence;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class MyDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $date = $request->query('date') ?? date('Y-m-d');
+        $date = $request->query('date') ?? Carbon::now()->addHours(7)->format('Y-m-d');
 
         $output = [
             'code'      => 400,

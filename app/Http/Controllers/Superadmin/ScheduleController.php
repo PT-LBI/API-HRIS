@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Schedule;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class ScheduleController extends Controller
@@ -75,7 +76,7 @@ class ScheduleController extends Controller
             return [
                 'user_id' => $user->user_id,
                 'user_name' => $user->user_name,
-                'schedules' => $this->getUserScheduleForDates($user->user_id, $dates)
+                'schedules' => convertResponseArray($this->getUserScheduleForDates($user->user_id, $dates))
             ];
         })->toArray();
     }
@@ -85,6 +86,7 @@ class ScheduleController extends Controller
         return collect($dates)->map(function ($date) use ($userId) {
             $schedule = Schedule::where('schedule_user_id', $userId)
                 ->whereDate('schedule_date', $date)
+                ->whereNull('schedules.deleted_at')
                 ->leftjoin('shifts', 'shift_id', '=', 'schedule_shift_id')
                 ->leftjoin('leave', 'leave_id', '=', 'schedule_leave_id')
                 ->select('schedules.*', 'shift_name', 'leave_type', 'leave_desc')
@@ -176,6 +178,83 @@ class ScheduleController extends Controller
                 'result'     => []
             ];
         }
+
+        return response()->json($output, 200);
+    }
+
+    public function create_bulk()
+    {
+        $validator = Validator::make(request()->all(),[
+            'schedule_shift_id'     => 'required',
+            'schedule_date_start'   => 'required|date',
+            'schedule_date_end'     => 'required|date|after_or_equal:schedule_date_start',
+            'schedule_user_id'      => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'code' => 500,
+                'status' => 'error',
+                'message' => $validator->messages()
+            ], 200);
+        }
+
+        if (request('schedule_date_start') < now()->toDateString()) {
+            return response()->json([
+                'code' => 500,
+                'status' => 'error',
+                'message' => 'Tanggal tidak boleh kurang dari hari ini',
+                'result' => []
+            ], 200);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $scheduleData = [];
+            $startDate = Carbon::parse(request('schedule_date_start'));
+            $endDate = Carbon::parse(request('schedule_date_end'));
+
+            // First, delete existing records in the date range by setting 'deleted_at'
+            $check_data = Schedule::where('schedule_user_id', request('schedule_user_id'))
+                ->whereBetween('schedule_date', [$startDate->toDateString(), $endDate->toDateString()])
+                ->whereNull('deleted_at')
+                ->get();
+            
+            if ($check_data->isNotEmpty()) {
+                foreach ($check_data as $data) {
+                    $data->update(['deleted_at' => Carbon::now()->addHours(7)]);
+                }
+            }
+
+            for ($date = $startDate; $date->lte($endDate); $date->addDay()) {
+                $scheduleData[] = [
+                    'schedule_user_id'  => request('schedule_user_id'),
+                    'schedule_shift_id' => request('schedule_shift_id') ?? 0,
+                    'schedule_date'     => $date->toDateString(),
+                    'schedule_note'     => request('schedule_note') ?? null,
+                    'schedule_status'   => 'in',
+                    'created_at'        => Carbon::now()->addHours(7),
+                    'updated_at'        => null,
+                ];
+            }
+
+            Schedule::insert($scheduleData);
+
+        DB::commit();
+        
+        $output = [
+            'code'      => 200,
+            'status'    => 'success',
+            'message'   => 'Berhasil menambahkan data',
+            'result'     => []
+        ];
+    } catch (Exception $e) {
+        DB::rollBack();
+        $output['code'] = 500;
+        $output['message'] = $output['message'];
+        // $output['message'] = $e->getMessage();
+    }
 
         return response()->json($output, 200);
     }

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Presence;
 use App\Models\Schedule;
 use App\Models\Shift;
+use App\Models\MasterLocation;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -157,6 +158,24 @@ class MyPresenceController extends Controller
             ], 200);
         }
 
+        if (auth()->user()->user_location_id || auth()->user()->user_location_id != null) {
+            $get_location = MasterLocation::where('location_id', auth()->user()->user_location_id)
+                ->first();
+            $user_location_latitude = $get_location->location_latitude;
+            $user_location_longitude = $get_location->location_longitude;
+            $user_location_radius = $get_location->location_radius;
+
+            $distance = getDistanceBetweenPoints($user_location_latitude, $user_location_longitude, request('latitude'), request('longitude'));
+            if ($distance > $user_location_radius) {
+                return response()->json([
+                    'code' => 500,
+                    'status' => 'error',
+                    'message' => 'Anda berada diluar jangkauan lokasi kerja',
+                    'result' => []
+                ], 200);
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -193,6 +212,20 @@ class MyPresenceController extends Controller
                 // Convert seconds to HH:MM:SS format
                 $extra_time = gmdate('H:i:s', abs($extra_seconds));
 
+                $get_presence = Presence::where('presence_schedule_id', request('schedule_id'))
+                    ->where('presence_user_id', auth()->user()->user_id)
+                    ->where('presence_status', 'in')
+                    ->first();
+
+                if (!$get_presence) {
+                    return response()->json([
+                        'code' => 500,
+                        'status' => 'error',
+                        'message' => 'Anda belum melakukan absen masuk',
+                        'result' => []
+                    ], 200);
+                }
+
                 Presence::where('presence_schedule_id', request('schedule_id'))
                     ->where('presence_user_id', auth()->user()->user_id)
                     ->where('presence_status', 'in')
@@ -207,6 +240,20 @@ class MyPresenceController extends Controller
                         'updated_at'             => now()->addHours(7),
                     ]);
             } elseif (request('type') == 'ovt_in') {
+                $get_presence = Presence::where('presence_schedule_id', request('schedule_id'))
+                    ->where('presence_user_id', auth()->user()->user_id)
+                    ->where('presence_status', 'out')
+                    ->first();
+
+                if (!$get_presence) {
+                    return response()->json([
+                        'code' => 500,
+                        'status' => 'error',
+                        'message' => 'Anda belum melakukan absen keluar',
+                        'result' => []
+                    ], 200);
+                }
+
                 Presence::create([
                     'presence_user_id'      => auth()->user()->user_id,
                     'presence_schedule_id'  => request('schedule_id'),
@@ -220,6 +267,20 @@ class MyPresenceController extends Controller
                     'updated_at'            => null,
                 ]);
             } elseif (request('type') == 'ovt_out') {
+                $get_presence = Presence::where('presence_schedule_id', request('schedule_id'))
+                    ->where('presence_user_id', auth()->user()->user_id)
+                    ->where('presence_status', 'ovt_in')
+                    ->first();
+
+                if (!$get_presence) {
+                    return response()->json([
+                        'code' => 500,
+                        'status' => 'error',
+                        'message' => 'Anda belum melakukan absen masuk lembur',
+                        'result' => []
+                    ], 200);
+                }
+
                 Presence::where('presence_schedule_id', request('schedule_id'))
                     ->where('presence_user_id', auth()->user()->user_id)
                     ->where('presence_status', 'ovt_in')
