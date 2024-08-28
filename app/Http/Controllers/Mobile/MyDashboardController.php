@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Schedule;
 use App\Models\User;
 use App\Models\Presence;
+use Illuminate\Support\Facades\DB;
 
 class MyDashboardController extends Controller
 {
@@ -44,6 +45,7 @@ class MyDashboardController extends Controller
                 'shift_name',
                 'shift_start_time',
                 'shift_finish_time',
+                DB::raw('TIMEDIFF(shifts.shift_finish_time, shifts.shift_start_time) as shift_duration'),
                 'schedule_date',
                 'schedule_leave_id',
                 'leave_type',
