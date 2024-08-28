@@ -82,8 +82,8 @@ class MyPresenceController extends Controller
                 ->first();
 
             $data = [
-                'normal' => $query_normal ? convertResponseSingle($query_normal) : '',
-                'overtime' => $query_ovt ? convertResponseSingle($query_ovt) : '',
+                'normal' => $query_normal ? convertResponseSingle($query_normal) : new \stdClass(),
+                'overtime' => $query_ovt ? convertResponseSingle($query_ovt) : new \stdClass(),
             ];
             
             $output = [

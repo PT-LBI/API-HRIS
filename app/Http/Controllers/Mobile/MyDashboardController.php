@@ -100,8 +100,8 @@ class MyDashboardController extends Controller
 
         $data = [
             'user' => convertResponseSingle($data_user),
-            'schedule' => $data_schedule ? convertResponseSingle($data_schedule) : '',
-            'presence' => $data_presence ? convertResponseSingle($data_presence) : '',
+            'schedule' => $data_schedule ? convertResponseSingle($data_schedule) : new \stdClass(),
+            'presence' => $data_presence ? convertResponseSingle($data_presence) : new \stdClass(),
             'title' => $title,
         ];
 
