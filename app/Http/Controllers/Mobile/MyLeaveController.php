@@ -63,7 +63,7 @@ class MyLeaveController extends Controller
             $queryTotal = Leave::query()
                 ->select('1 as total')
                 ->where('deleted_at', null)
-                ->where('log_notif_user_id', auth()->user()->user_id);
+                ->where('leave_user_id', auth()->user()->user_id);
             $total_all = $queryTotal->count();
 
             $data = [
