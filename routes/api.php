@@ -102,6 +102,7 @@ Route::middleware('auth:api')->group(function() {
         Route::get('', [MasterPayrollController::class, 'index']);
         Route::post('/create', [MasterPayrollController::class, 'create']);
         Route::get('/detail/{id}', [MasterPayrollController::class, 'detail']);
+        Route::get('/monthly_payroll_detail/{id}', [MasterPayrollController::class, 'monthly_payroll_detail']);
         Route::patch('/update/{id}', [MasterPayrollController::class, 'update']);
         Route::delete('/delete/{id}', [MasterPayrollController::class, 'delete']);
     });

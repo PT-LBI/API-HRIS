@@ -30,6 +30,8 @@ class EmployeeController extends Controller
             $status = request()->query('status');
             $company_id = request()->query('company_id');
             $division_id = request()->query('division_id');
+            $start_date = request()->query('start_date');
+            $end_date = request()->query('end_date');
 
             $query = User::query()
                 ->select(
@@ -44,12 +46,18 @@ class EmployeeController extends Controller
                     'user_bpjs_kes',
                     'user_bpjs_tk',
                     'user_place_birth',
+                    'user_bank_name',
+                    'user_account_name',
+                    'user_account_number',
+                    'user_place_birth',
+                    'user_place_birth',
                     'user_company_id',
                     'company_name',
                     'user_division_id',
                     'division_name',
                     'user_location_id',
                     'location_name',
+                    'user_join_date',
                     'user_status',
                     'users.created_at',
                 )
@@ -65,6 +73,14 @@ class EmployeeController extends Controller
                         ->orWhere('email', 'like', '%' . $search . '%')
                         ->orWhere('user_name', 'like', '%' . $search . '%');
                 });
+            }
+
+            if ($start_date && $start_date !== null) {
+                if ($end_date && $end_date !== null) {
+                    $query->whereBetween('user_join_date', [$start_date, $end_date]);
+                } else{
+                    $query->where('user_join_date', $start_date);
+                }
             }
 
             if ($status && $status !== null) {
@@ -122,12 +138,22 @@ class EmployeeController extends Controller
     {
         $validator = Validator::make(request()->all(), [
             'user_name' => 'required',
+            'user_code' => 'required|unique:users',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6|max:20',
             'user_company_id' => 'required|integer',
             'user_division_id' => 'required|integer',
-            'user_role' => 'required',
-            'user_location_id' => 'required',
+            'user_province_id' => 'required|integer',
+            'user_district_id' => 'required|integer',
+            'user_position' => 'required',
+            'user_identity_number' => 'required',
+            'user_date_birth' => 'required',
+            'user_join_date' => 'required',
+            'user_gender' => 'required',
+            'user_address' => 'required',
+            'user_status' => 'required|in:active,inactive',
+            'user_location_is_determined' => 'required',
+            'user_marital_status' => 'in:single,married,divorced_alive,divorced_die',
             'user_profile_url' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
@@ -145,10 +171,10 @@ class EmployeeController extends Controller
             $image_path = $image->storeAs('images/users', $image_name, 'public');
             $image_url = env('APP_URL'). '/storage/' . $image_path;
         }
-        $user_code = generateCode();
+        // $user_code = generateCode();
 
         $user = User::create([
-            'user_code' => $user_code,
+            'user_code' => request('user_code'),
             'email' => request('email'),
             'password' => Hash::make(request('password')),
             'user_name' => request('user_name'),
@@ -157,18 +183,30 @@ class EmployeeController extends Controller
             'user_identity_number' => request('user_identity_number'),
             'user_bpjs_kes' => request('user_bpjs_kes'),
             'user_bpjs_tk' => request('user_bpjs_tk'),
+            'user_npwp' => request('user_npwp'),
+            'user_date_birth' => request('user_date_birth'),
             'user_place_birth' => request('user_place_birth'),
             'user_education_json' => request('user_education_json'),
             'user_marital_status' => request('user_marital_status'),
             'user_number_children' => request('user_number_children'),
             'user_phone_number' => request('user_phone_number'),
             'user_emergency_contact' => request('user_emergency_contact'),
-            'user_entry_year' => request('user_entry_year'),
+            'user_gender' => request('user_gender'),
+            'user_join_date' => request('user_join_date'),
             'user_company_id' => request('user_company_id'),
             'user_division_id' => request('user_division_id'),
             'user_position' => request('user_position'),
+            'user_province_id' => request('user_province_id'),
+            'user_province_name' => request('user_province_name'),
+            'user_district_id' => request('user_district_id'),
+            'user_district_name' => request('user_district_name'),
+            'user_location_is_determined' => request('user_location_is_determined'),
             'user_location_id' => request('user_location_id'),
             'user_role' => request('user_role'),
+            'user_blood_type' => request('user_blood_type'),
+            'user_bank_name' => request('user_bank_name'),
+            'user_account_name' => request('user_account_name'),
+            'user_account_number' => request('user_account_number'),
             'user_status' => 'active',
             'user_profile_url' => isset($image_url) ? $image_url : null,
             'created_at' => now()->addHours(7),
@@ -207,21 +245,32 @@ class EmployeeController extends Controller
                 'user_npwp',
                 'user_bpjs_kes',
                 'user_bpjs_tk',
+                'user_date_birth',
                 'user_place_birth',
                 'user_education_json',
                 'user_marital_status',
                 'user_number_children',
                 'user_phone_number',
                 'user_emergency_contact',
-                'user_entry_year',
+                'user_gender',
+                'user_blood_type',
+                'user_bank_name',
+                'user_account_name',
+                'user_account_number',
                 'user_company_id',
                 'company_name',
                 'user_division_id',
                 'division_name',
                 'user_position',
+                'user_province_id',
+                'user_province_name',
+                'user_district_id',
+                'user_district_name',
+                'user_location_is_determined',
                 'user_location_id',
                 'location_name',
                 'user_status',
+                'user_join_date',
                 'user_profile_url'
             )
             ->leftJoin('companies', 'user_company_id', '=', 'company_id')
@@ -267,9 +316,17 @@ class EmployeeController extends Controller
             'email' => 'required|email|unique:users,email,' . $id . ',user_id',
             'user_company_id' => 'required|integer',
             'user_division_id' => 'required|integer',
-            'user_location_id' => 'required|integer',
+            'user_province_id' => 'required|integer',
+            'user_district_id' => 'required|integer',
+            'user_position' => 'required',
+            'user_identity_number' => 'required',
+            'user_date_birth' => 'required',
+            'user_join_date' => 'required',
+            'user_gender' => 'required',
+            'user_address' => 'required',
             'user_status' => 'required|in:active,inactive',
-            'user_marital_status' => 'in:single,married,divorced',
+            'user_location_is_determined' => 'required',
+            'user_marital_status' => 'in:single,married,divorced_alive,divorced_die',
         ];
 
         if ($request->hasFile('user_profile_url')) {
@@ -338,11 +395,21 @@ class EmployeeController extends Controller
             'user_marital_status'   => $request->user_marital_status,
             'user_number_children'  => $request->user_number_children,
             'user_emergency_contact'    => $request->user_emergency_contact,
-            'user_entry_year'       => $request->user_entry_year,
+            'user_gender'           => $request->user_gender,
+            'user_join_date'        => $request->user_join_date,
+            'user_bank_name'        => $request->user_bank_name,
+            'user_account_name'     => $request->user_account_name,
+            'user_account_number'   => $request->user_account_number,
             'user_company_id'       => $request->user_company_id,
             'user_division_id'      => $request->user_division_id,
             'user_position'         => $request->user_position,
+            'user_province_id'      => $request->user_province_id,
+            'user_province_name'    => $request->user_province_name,
+            'user_district_id'      => $request->user_district_id,
+            'user_district_name'    => $request->user_district_name,
+            'user_location_is_determined'   => $request->user_location_is_determined,
             'user_location_id'      => $request->user_location_id,
+            'user_blood_type'       => $request->user_blood_type,
             'user_status'           => $request->user_status,
             'user_profile_url'      => isset($image_url) ? $image_url : $check_data->user_profile_url,
             'updated_at'            => now()->addHours(7),

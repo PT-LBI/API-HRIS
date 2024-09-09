@@ -20,6 +20,7 @@ class MasterLocation extends Model
         'location_name',
         'location_longitude',
         'location_latitude',
+        'location_company_id',
         'location_radius',
         'created_at',
         'updated_at',

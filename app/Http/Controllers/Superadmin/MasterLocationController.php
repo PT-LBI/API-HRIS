@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Superadmin;
 use Illuminate\Http\Request;
 use App\Models\MasterLocation;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class MasterLocationController extends Controller
 {
@@ -23,6 +24,7 @@ class MasterLocationController extends Controller
             $sort = request()->query('sort') ?? 'location_id';
             $dir = request()->query('dir') ?? 'DESC';
             $search = request()->query('search');
+            $company_id = request()->query('company_id');
             
             $query = MasterLocation::query()
                 ->select(
@@ -30,15 +32,23 @@ class MasterLocationController extends Controller
                     'location_name',
                     'location_longitude',
                     'location_latitude',
+                    'location_company_id',
+                    'company_name',
                     'location_radius',
-                    'created_at',
+                    'master_locations.created_at',
+                    DB::raw('(SELECT count(user_id) FROM users WHERE user_location_id = master_locations.location_id) as total_user')
                 )
-                ->where('deleted_at', null);
+                ->leftJoin('companies', 'company_id', '=', 'location_company_id')
+                ->where('master_locations.deleted_at', null);
             
             if (!empty($search)) {
                 $query->where(function ($query) use ($search) {
                     $query->where('location_name', 'like', '%' . $search . '%');
                 });
+            }
+
+            if ($company_id && $company_id !== null) {
+                $query->where('location_company_id', $company_id);
             }
 
             $query->orderBy($sort, $dir);
@@ -47,7 +57,8 @@ class MasterLocationController extends Controller
             //get total data
             $queryTotal = MasterLocation::query()
                 ->select('1 as total')
-                ->where('deleted_at', null);
+                ->leftJoin('companies', 'company_id', '=', 'location_company_id')
+                ->where('master_locations.deleted_at', null);
             $total_all = $queryTotal->count();
 
             $data = [
@@ -82,6 +93,7 @@ class MasterLocationController extends Controller
             'location_name' => 'required',
             'location_longitude' => 'required',
             'location_latitude' => 'required',
+            'location_company_id' => 'required',
             'location_radius' => 'required',
         ]);
 
@@ -97,9 +109,10 @@ class MasterLocationController extends Controller
             'location_name'         => request('location_name'),
             'location_longitude'    => request('location_longitude'),
             'location_latitude'     => request('location_latitude'),
+            'location_company_id'   => request('location_company_id'),
             'location_radius'       => request('location_radius'),
             'created_at'            => now()->addHours(7),
-            'updated_at'             => null,
+            'updated_at'            => null,
         ]);
 
         if ($data) {
@@ -136,9 +149,12 @@ class MasterLocationController extends Controller
             'location_name',
             'location_longitude',
             'location_latitude',
+            'location_company_id',
+            'company_name',
             'location_radius',
-            'created_at',
+            'master_locations.created_at',
         )
+        ->leftJoin('companies', 'company_id', '=', 'location_company_id')
         ->where('location_id', $id)
         ->first();
         
@@ -169,6 +185,7 @@ class MasterLocationController extends Controller
             'location_name'         => 'required',
             'location_longitude'    => 'required',
             'location_latitude'     => 'required',
+            'location_company_id'   => 'required',
             'location_radius'       => 'required',
         ]);
 
@@ -185,6 +202,7 @@ class MasterLocationController extends Controller
             'location_name'         => $request->location_name,
             'location_longitude'    => $request->location_longitude,
             'location_latitude'     => $request->location_latitude,
+            'location_company_id'   => $request->location_company_id,
             'location_radius'       => $request->location_radius,
             'updated_at'            => now()->addHours(7),
         ]);

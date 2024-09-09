@@ -29,22 +29,21 @@ class MyLeaveController extends Controller
             $status = request()->query('status');
             $type = request()->query('type');
             
-            $query = Leave::query()
+            $query = LeaveDetail::query()
                 ->select(
-                    'leave_id',
+                    'leave_detail_id',
+                    'leave_detail_date',
                     'leave_type',
-                    'leave_start_date',
-                    'leave_end_date',
-                    'leave_day',
                     'leave_status',
                     'leave_desc',
                 )
-                ->where('deleted_at', null)
+                ->leftjoin('leave', 'leave_id', '=', 'leave_detail_leave_id')
+                ->where('leave.deleted_at', null)
                 ->where('leave_user_id', auth()->user()->user_id);
             
             if (!empty($search)) {
                 $query->where(function ($query) use ($search) {
-                    $query->where('leave_desc', 'like', '%' . $search . '%');
+                    $query->where('leave_detail_date', 'like', '%' . $search . '%');
                 });
             }
 
@@ -60,9 +59,10 @@ class MyLeaveController extends Controller
             $res = $query->paginate($limit, ['*'], 'page', $page);
 
             //get total data
-            $queryTotal = Leave::query()
-                ->select('1 as total')
-                ->where('deleted_at', null)
+            $queryTotal = LeaveDetail::query()
+            ->select('1 as total')
+                ->leftjoin('leave', 'leave_id', '=', 'leave_detail_leave_id')
+                ->where('leave.deleted_at', null)
                 ->where('leave_user_id', auth()->user()->user_id);
             $total_all = $queryTotal->count();
 
@@ -113,7 +113,6 @@ class MyLeaveController extends Controller
             $image_path = $image->storeAs('images/leave', $image_name, 'public');
             $image_url = env('APP_URL'). '/storage/' . $image_path;
         }
-
 
         try {
             DB::beginTransaction();
@@ -197,26 +196,29 @@ class MyLeaveController extends Controller
             'result'     => []
         ];
 			
-        $data = Leave::query()
+        $data = LeaveDetail::query()
         ->select(
-            'leave_id',
+            'leave_detail_id',
+            'leave_detail_date',
+            'leave_type',
+            'leave_status',
+            'leave_desc',
             'leave_user_id',
             'user_name',
             'user_position',
             'company_id',
             'company_name',
+            'division_id',
+            'division_name',
             'leave_type',
-            'leave_start_date',
-            'leave_end_date',
-            'leave_day',
-            'leave_status',
-            'leave_desc',
             'leave_image',
             'leave.created_at',
         )
-        ->where('leave_id', $id)
+        ->where('leave_detail_id', $id)
+        ->leftjoin('leave', 'leave_id', '=', 'leave_detail_leave_id')
         ->leftjoin('users', 'leave.leave_user_id', '=', 'users.user_id')
         ->leftjoin('companies', 'users.user_company_id', '=', 'companies.company_id')
+        ->leftjoin('divisions', 'users.user_division_id', '=', 'divisions.division_id')
         ->first();
         
         $output = [

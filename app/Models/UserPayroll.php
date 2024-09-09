@@ -29,6 +29,9 @@ class UserPayroll extends Model
         'user_payroll_bpjs',
         'user_payroll_total_accepted',
         'user_payroll_status',
+        'user_payroll_month',
+        'user_payroll_year',
+        'user_payroll_sent_at',
         'created_at',
         'updated_at',
     ];

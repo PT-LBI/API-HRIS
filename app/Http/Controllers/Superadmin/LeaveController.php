@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\superadmin;
+namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -8,8 +8,12 @@ use App\Models\Leave;
 use App\Models\LeaveDetail;
 use App\Models\Schedule;
 use App\Models\LogNotif;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\SendNotif;
+use Illuminate\Support\Facades\Notification;
+
 
 class LeaveController extends Controller
 {
@@ -188,52 +192,38 @@ class LeaveController extends Controller
                 $this->create_schedule($check_data);
             }
 
-            // if ($check_data['leave_user_id'] && auth()->user()->user_fcm_token) {
-            if ($check_data['leave_user_id']) {
-                $title = $request->leave_status == 'approved' ? 'Disetujui' : 'Ditolak';
-                $msg = $request->leave_status == 'approved' ? 
-                    'Selamat, pengajuan cuti Anda telah disetujui.' :
-                    'Maaf, pengajuan cuti Anda telah ditolak.';
+            $message = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
 
-                // Prepare notification data
-                $dataNotif = [
-                    'type' => 'leave',
-                    'icon' => '',
-                    'title' => "Pengajuan Cuti {$title}",
-                    'body' => "{$msg}",
-                    'sound' => 'default',
-                    'data' => [
-                        'id' => $id,
-                        'code' => 'leave',
-                        'title' => "Pengajuan Cuti {$title}",
-                        'msg' => $msg,
-                        'image_url' => ''
-                    ]
-                ];
-            
-                // Send notification using a helper or service
-                // $isSend = sendNotif([
-                //     'priority' => 'high',
-                //     'notification' => $dataNotif,
-                //     'to' => $user->user_fcm_token
-                // ]);
-            
-                // If notification is successfully sent, insert into the notification log
-                // if ($isSend && $isSend['success'] == 1) {
-                    $insertNotif = [
-                        'log_notif_user_id'     => $check_data['leave_user_id'],
-                        'log_notif_data_json'   => json_encode($dataNotif),
-                        'log_notif_is_read'     => 0,
-                        'created_at'            => now()->addHours(7),
-                        'updated_at'            => null,
-                    ];
-            
-                    LogNotif::create($insertNotif);
-                // }
-            }
+            $get_user = User::find($check_data->leave_user_id);
+            // Kirim notifikasi
+            $is_send = Notification::send($get_user, new SendNotif($message));
+            dd($is_send);
 
-            DB::commit();
-    
+
+            // if($is_send) {
+            //     $dataNotif = [
+            //         'type' => 'leave',
+            //         'icon' => '',
+            //         'title' => 'Cuti anda telah di ' . $request->leave_status,
+            //         'body' => $message,
+            //         'sound' => 'default',
+            //         'data' => [
+            //             'id' => $id,
+            //             'code' => '',
+            //             'title' => 'Cuti anda telah di ' . $request->leave_status,
+            //             'msg' => $message,
+            //             'image_url' => '',
+            //         ],
+            //     ];
+
+            //     LogNotif::create([
+            //         'log_notif_user_id' => $check_data->leave_user_id,
+            //         'log_notif_data_json' => $dataNotif,
+            //         'log_notif_is_read' => 0,
+            //         'created_at' => now()->addHours(7),
+            //     ]);
+            // }
+
             $output = [
                 'code'      => 200,
                 'status'    => 'success',

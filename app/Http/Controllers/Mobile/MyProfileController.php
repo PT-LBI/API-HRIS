@@ -32,6 +32,7 @@ class MyProfileController extends Controller
                 'user_npwp',
                 'user_status',
                 'user_join_date',
+                'user_blood_type',
                 'user_profile_url',
                 'users.created_at',
             )

@@ -12,6 +12,11 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable implements JWTSubject
 {
     use Notifiable;
+    
+    public function routeNotificationForFcm()
+    {
+        return $this->user_fcm_token;
+    }
 
     // Rest omitted for brevity
 
@@ -59,6 +64,7 @@ class User extends Authenticatable implements JWTSubject
         'user_bpjs_tk',
         'user_place_birth',
         'user_date_birth',
+        'user_gender',
         'user_education_json',
         'user_marital_status',
         'user_number_children',
@@ -72,11 +78,17 @@ class User extends Authenticatable implements JWTSubject
         'user_district_id',
         'user_district_name',
         'user_address',
+        'user_location_is_determined',
         'user_location_id',
         'user_status',
         'user_profile_url',
         'user_desc',
         'user_join_date',
+        'user_bank_name',
+        'user_account_name',
+        'user_account_number',
+        'user_blood_type',
+        'user_fcm_token',
         'created_at',
         'updated_at',
         'deleted_at',
