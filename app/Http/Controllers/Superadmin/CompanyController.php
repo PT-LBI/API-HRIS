@@ -99,7 +99,8 @@ class CompanyController extends Controller
 
         $data = Company::create([
             'company_name'      => request('company_name'),
-            'company_status'   => 'active',
+            'company_address'   => request('company_address'),
+            'company_status'    => 'active',
             'created_at'        => now()->addHours(7),
             'updated_at'        => null,
         ]);
@@ -213,6 +214,7 @@ class CompanyController extends Controller
        
         $res = $check_data->update([
             'company_name'          => $request->company_name,
+            'company_address'       => $request->company_address,
             // 'user_profile_url'      => isset($image_url) ? $image_url : $check_data->user_profile_url,
             'company_status'        => $request->company_status,
             'updated_at'            => now()->addHours(7),

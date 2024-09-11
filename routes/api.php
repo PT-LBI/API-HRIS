@@ -12,6 +12,7 @@ use App\Http\Controllers\Superadmin\CompanyController;
 use App\Http\Controllers\Superadmin\DivisionController;
 use App\Http\Controllers\Superadmin\AnnouncementController;
 use App\Http\Controllers\Superadmin\MasterPayrollController;
+use App\Http\Controllers\Superadmin\UserPayrollController;
 use App\Http\Controllers\Superadmin\ShiftController;
 use App\Http\Controllers\Superadmin\ScheduleController;
 use App\Http\Controllers\Superadmin\LeaveController;
@@ -102,9 +103,19 @@ Route::middleware('auth:api')->group(function() {
         Route::get('', [MasterPayrollController::class, 'index']);
         Route::post('/create', [MasterPayrollController::class, 'create']);
         Route::get('/detail/{id}', [MasterPayrollController::class, 'detail']);
-        Route::get('/monthly_payroll_detail/{id}', [MasterPayrollController::class, 'monthly_payroll_detail']);
+        Route::get('/monthly_payroll', [MasterPayrollController::class, 'monthly_payroll']);
         Route::patch('/update/{id}', [MasterPayrollController::class, 'update']);
         Route::delete('/delete/{id}', [MasterPayrollController::class, 'delete']);
+    });
+    
+    Route::group(['prefix' => 'user_payroll'], function () {
+        // Route::get('', [UserPayrollController::class, 'index']);
+        Route::post('/create', [UserPayrollController::class, 'create']);
+        Route::get('/detail/{id}', [UserPayrollController::class, 'detail']);
+        // Route::get('/monthly_payroll_detail/{id}', [UserPayrollController::class, 'monthly_payroll_detail']);
+        Route::patch('/update/{id}', [UserPayrollController::class, 'update']);
+        Route::patch('/send/{id}', [UserPayrollController::class, 'send']);
+        // Route::delete('/delete/{id}', [UserPayrollController::class, 'delete']);
     });
     
     Route::group(['prefix' => 'shift'], function () {
