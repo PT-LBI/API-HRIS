@@ -192,12 +192,12 @@ class LeaveController extends Controller
                 $this->create_schedule($check_data);
             }
 
-            $message = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
+            // $message = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
 
-            $get_user = User::find($check_data->leave_user_id);
+            // $get_user = User::find($check_data->leave_user_id);
             // Kirim notifikasi
-            $is_send = Notification::send($get_user, new SendNotif($message));
-            dd($is_send);
+            // $is_send = Notification::send($get_user, new SendNotif($message));
+            // dd($is_send);
 
 
             // if($is_send) {
