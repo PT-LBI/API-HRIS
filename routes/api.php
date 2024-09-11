@@ -24,6 +24,7 @@ use App\Http\Controllers\Mobile\MyScheduleController;
 use App\Http\Controllers\Mobile\MyLeaveController;
 use App\Http\Controllers\Mobile\MyPresenceController;
 use App\Http\Controllers\Mobile\MyNotifController;
+use App\Http\Controllers\Mobile\MyPayrollController;
 use App\Http\Controllers\Mobile\MyDashboardController;
 
 Route::group(['middleware' => 'api'], function () {
@@ -200,6 +201,11 @@ Route::middleware('auth:api')->group(function() {
    
     Route::group(['prefix' => 'mobile/dashboard'], function () {
         Route::get('', [MyDashboardController::class, 'index']);
+    });
+    
+    Route::group(['prefix' => 'mobile/payroll'], function () {
+        Route::get('', [MyPayrollController::class, 'index']);
+        Route::get('/detail/{id}', [MyPayrollController::class, 'detail']);
     });
 
 });
