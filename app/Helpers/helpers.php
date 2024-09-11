@@ -15,8 +15,25 @@ if (!function_exists('convertResponseSingle')) {
     function convertResponseSingle($data)
     {
         return collect($data)->map(function ($value) {
-            return $value === null ? '' : $value;
+            if ($value === null) {
+                return '';
+            }
+
+            // Check if the value is a valid JSON string
+            if (is_string($value) && isJson($value)) {
+                return json_decode($value, true); // Decode JSON to array
+            }
+
+            return $value;
         });
+    }
+}
+
+if (!function_exists('isJson')) {
+    function isJson($string)
+    {
+        json_decode($string);
+        return (json_last_error() == JSON_ERROR_NONE);
     }
 }
 
