@@ -142,6 +142,7 @@ class EmployeeController extends Controller
             'user_code' => 'required|unique:users',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6|max:20',
+            'repeat_password' => 'required|same:password',
             'user_company_id' => 'required|integer',
             'user_division_id' => 'required|integer',
             'user_province_id' => 'required|integer',
