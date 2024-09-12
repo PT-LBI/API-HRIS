@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Superadmin;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\MasterPayroll;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -40,7 +41,7 @@ class EmployeeController extends Controller
                     'email',
                     'user_name',
                     'user_address',
-                    'user_identity_address',
+                    'user_driving_license',
                     'user_identity_number',
                     'user_npwp',
                     'user_bpjs_kes',
@@ -179,14 +180,14 @@ class EmployeeController extends Controller
             'password' => Hash::make(request('password')),
             'user_name' => request('user_name'),
             'user_address' => request('user_address'),
-            'user_identity_address' => request('user_identity_address'),
+            'user_driving_license' => request('user_driving_license'),
             'user_identity_number' => request('user_identity_number'),
             'user_bpjs_kes' => request('user_bpjs_kes'),
             'user_bpjs_tk' => request('user_bpjs_tk'),
             'user_npwp' => request('user_npwp'),
             'user_date_birth' => request('user_date_birth'),
             'user_place_birth' => request('user_place_birth'),
-            'user_education_json' => request('user_education_json'),
+            'user_last_education' => request('user_last_education'),
             'user_marital_status' => request('user_marital_status'),
             'user_number_children' => request('user_number_children'),
             'user_phone_number' => request('user_phone_number'),
@@ -233,21 +234,21 @@ class EmployeeController extends Controller
 
     public function detail($id)
     {
-        $data = User::query()
+        $user = User::query()
             ->select(
                 'user_id',
                 'user_code',
                 'email',
                 'user_name',
                 'user_address',
-                'user_identity_address',
+                'user_driving_license',
                 'user_identity_number',
                 'user_npwp',
                 'user_bpjs_kes',
                 'user_bpjs_tk',
                 'user_date_birth',
                 'user_place_birth',
-                'user_education_json',
+                'user_last_education',
                 'user_marital_status',
                 'user_number_children',
                 'user_phone_number',
@@ -279,21 +280,29 @@ class EmployeeController extends Controller
             ->where('user_id', $id)
             ->first();
 
-        if ($data) {
-            $output = [
-                'code' => 200,
-                'status' => 'success',
-                'message' => 'Data ditemukan',
-                'result' => $data ? convertResponseSingle($data) :'',
-            ];
-        } else {
-            $output = [
-                'code' => 500,
-                'status' => 'error',
-                'message' => 'Data tidak ditemukan',
-                'result' => '',
-            ];
-        }
+        $payroll = MasterPayroll::query()
+            ->select(
+                'payroll_id',
+                'payroll_user_id',
+                'payroll_value',
+                'payroll_overtime_hour',
+                'payroll_status',
+            )
+            ->where('payroll_user_id', $id)
+            ->first();
+
+        $data = [
+            'user' => $user ? convertResponseSingle($user) :'',
+            'payroll' => $payroll ? convertResponseSingle($payroll) :'',
+        ];
+
+        $output = [
+            'code' => 200,
+            'status' => 'success',
+            'message' => 'Data ditemukan',
+            'result' => $data,
+        ];
+       
         return response()->json($output, 200);
 
     }
@@ -384,14 +393,14 @@ class EmployeeController extends Controller
             'email'                 => $request->email,
             'password'              => isset($request->password) ? Hash::make($request->password) : $check_data->password,
             'user_address'          => $request->user_address,
-            'user_identity_address' => $request->user_identity_address,
+            'user_driving_license' => $request->user_driving_license,
             'user_identity_number'  => $request->user_identity_number,
             'user_npwp'             => $request->user_npwp,
             'user_bpjs_kes'         => $request->user_bpjs_kes,
             'user_bpjs_tk'          => $request->user_bpjs_tk,
             'user_place_birth'      => $request->user_place_birth,
             'user_date_birth'       => $request->user_date_birth,
-            'user_education_json'   => $request->user_education_json,
+            'user_last_education'   => $request->user_last_education,
             'user_marital_status'   => $request->user_marital_status,
             'user_number_children'  => $request->user_number_children,
             'user_emergency_contact'    => $request->user_emergency_contact,
