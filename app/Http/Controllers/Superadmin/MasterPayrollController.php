@@ -28,8 +28,8 @@ class MasterPayrollController extends Controller
             $status = request()->query('status');
             $company_id = request()->query('company_id');
             $division_id = request()->query('division_id');
-            $this_month = date('m');
-            
+            $this_year = date('Y');
+           
             $query = MasterPayroll::query()
                 ->select(
                     'payroll_id',
@@ -41,17 +41,18 @@ class MasterPayrollController extends Controller
                     'user_division_id',
                     'division_name',
                     'user_position',
-                    DB::raw('(SELECT SUM(user_payroll_total_accepted)
+                    DB::raw('CAST(COALESCE((SELECT SUM(user_payroll_total_accepted)
                         FROM user_payrolls
-                        WHERE user_payroll_payroll_id = payroll_id
+                        WHERE user_payroll_user_id = master_payrolls.payroll_user_id
                         AND user_payroll_status = "sent"
-                        AND user_payroll_month = ' . $this_month . '
-                    ) as total_accepted_year'),
+                        AND user_payroll_year = ' . $this_year . '
+                    ), 0) AS UNSIGNED) as total_accepted_year'),
                     DB::raw('(SELECT user_payroll_sent_at
                         FROM user_payrolls
-                        WHERE user_payroll_payroll_id = payroll_id
+                        WHERE user_payroll_user_id = master_payrolls.payroll_user_id
                         AND user_payroll_status = "sent"
                         ORDER BY user_payroll_sent_at DESC
+                        LIMIT 1
                     ) as user_payroll_sent_at'),
                     'payroll_status'
                 )
@@ -207,7 +208,8 @@ class MasterPayrollController extends Controller
             $query = UserPayroll::query()
                 ->select(
                     'user_payroll_id',
-                    DB::raw('CONCAT(user_payroll_month, "-", user_payroll_year) as payroll_period'),
+                    'user_payroll_user_id',
+                    DB::raw("DATE_FORMAT(CONCAT(user_payroll_year, '-', user_payroll_month, '-01'), '%M %Y') as payroll_period"),
                     'user_payroll_value',
                     DB::raw('(user_payroll_overtime_hour + user_payroll_transport + user_payroll_communication) - (user_payroll_absenteeism_cut + user_payroll_bpjs) as other_component'),
                     'user_payroll_total_accepted',
