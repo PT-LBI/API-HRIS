@@ -211,7 +211,7 @@ class MasterPayrollController extends Controller
                     'user_payroll_user_id',
                     DB::raw("DATE_FORMAT(CONCAT(user_payroll_year, '-', user_payroll_month, '-01'), '%M %Y') as payroll_period"),
                     'user_payroll_value',
-                    DB::raw('(user_payroll_overtime_hour + user_payroll_transport + user_payroll_communication) - (user_payroll_absenteeism_cut + user_payroll_bpjs) as other_component'),
+                    DB::raw('(user_payroll_overtime_hour + user_payroll_transport + user_payroll_communication + user_payroll_meal_allowance) - (user_payroll_absenteeism_cut + user_payroll_bpjs) as other_component'),
                     'user_payroll_total_accepted',
                     'user_payroll_status',
                     'user_payrolls.created_at',

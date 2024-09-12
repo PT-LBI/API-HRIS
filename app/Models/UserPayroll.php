@@ -24,6 +24,7 @@ class UserPayroll extends Model
         'user_payroll_overtime_hour',
         'user_payroll_transport',
         'user_payroll_communication',
+        'user_payroll_meal_allowance',
         'user_payroll_absenteeism_cut',
         'user_payroll_bpjs',
         'user_payroll_total_accepted',
