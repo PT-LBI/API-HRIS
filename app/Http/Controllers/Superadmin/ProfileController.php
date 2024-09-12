@@ -23,22 +23,36 @@ class ProfileController extends Controller
                 'user_id',
                 'email',
                 'user_name',
+                'user_code',
                 'user_phone_number',
                 'user_role',
                 'user_identity_number',
+                'user_driving_license',
                 'user_npwp',
                 'user_status',
-                'user_join_date',
+                DB::raw('DATE(user_join_date) as user_join_date'),
+                'user_date_birth',
+                'user_gender',
+                'user_bpjs_kes',
+                'user_bpjs_tk',
                 'user_position',
+                'user_company_id',
+                'company_name',
+                'user_division_id',
+                'division_name',
                 'user_province_id',
                 'user_province_name',
                 'user_district_id',
                 'user_district_name',
                 'user_profile_url',
-                'created_at',
-                'updated_at'
+                'user_bank_name',
+                'user_account_name',
+                'user_account_number',
+                'users.created_at',
             )
             ->where('user_id', auth()->user()->user_id)
+            ->leftjoin('companies', 'users.user_company_id', '=', 'companies.company_id')
+            ->leftjoin('divisions', 'users.user_division_id', '=', 'divisions.division_id')
             ->first();
 
         if ($data) {

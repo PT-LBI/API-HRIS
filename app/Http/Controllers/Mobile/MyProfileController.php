@@ -31,7 +31,7 @@ class MyProfileController extends Controller
                 'user_address',
                 'user_npwp',
                 'user_status',
-                'user_join_date',
+                DB::raw('DATE(user_join_date) as user_join_date'),
                 'user_blood_type',
                 'user_profile_url',
                 'users.created_at',
