@@ -34,6 +34,7 @@ class Presence extends Model
         'presence_out_note',
         'created_at',
         'updated_at',
+        'deleted_at',
     ];
 
     protected $hidden = [

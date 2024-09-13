@@ -193,6 +193,7 @@ Route::middleware('auth:api')->group(function() {
     Route::group(['prefix' => 'mobile/presence'], function () {
         Route::get('', [MyPresenceController::class, 'index']);
         Route::post('/create', [MyPresenceController::class, 'create']);
+        Route::delete('/delete/{id}', [MyPresenceController::class, 'delete']);
     });
 
     Route::group(['prefix' => 'mobile/notif'], function () {

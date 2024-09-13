@@ -342,4 +342,43 @@ class MyPresenceController extends Controller
 
         return $check_presence;
     }
+
+    //for testing purpose
+    public function delete($id)
+    {
+        $check_data = Presence::find($id);
+
+        if (!$check_data) {
+            return response()->json([
+                'code' => 500,
+                'status' => 'error',
+                'message' => 'Data tidak ditemukan',
+                'result' => [],
+            ], 200);
+        }
+
+        //soft delete post
+        $res = $check_data->update([
+            'deleted_at'    => now()->addHours(7),
+        ]);
+
+        if ($res) {
+            $output = [
+                'code'      => 200,
+                'status'    => 'success',
+                'message'   => 'Berhasil menghapus data',
+                'result'     => []
+            ];
+        } else {
+            $output = [
+                'code'      => 500,
+                'status'    => 'error',
+                'message'   => 'Gagal menghapus data',
+                'result'     => []
+            ];
+        }
+
+        return response()->json($output, 200);
+
+    }
 }
