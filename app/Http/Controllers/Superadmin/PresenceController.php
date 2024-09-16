@@ -38,10 +38,20 @@ class PresenceController extends Controller
                     'presence.presence_schedule_id',
                     'schedule_date',
                     DB::raw("CONCAT(shifts.shift_start_time, ' - ', shifts.shift_finish_time) as working_hours"),
-                    // DB::raw("TIME(presence.presence_in_time) as presence_in_time"),
-                    // DB::raw("TIME(presence.presence_out_time) as presence_out_time"),
                     'presence_in_time',
+                    DB::raw("
+                        CASE
+                            WHEN TIME(presence_in_time) > TIME(shifts.shift_start_time) THEN 'Late'
+                            ELSE 'On Time'
+                        END as presence_in_status
+                    "),
                     'presence_out_time',
+                    DB::raw("
+                        CASE
+                            WHEN TIME(presence_out_time) >= TIME(shifts.shift_finish_time) THEN 'On Time'
+                            ELSE 'Late'
+                        END as presence_out_status
+                    "),
                     'presence.presence_extra_time',
                     'schedules.schedule_status',
                     DB::raw("
@@ -49,7 +59,7 @@ class PresenceController extends Controller
                             WHEN presence.presence_status IN ('in', 'out') THEN 'reguler'
                             ELSE 'overtime'
                         END as presence_status
-                    ")
+                    "),
                 )
                 ->leftjoin('users', 'presence_user_id', '=', 'user_id')
                 ->leftjoin('companies', 'user_company_id', '=', 'company_id')

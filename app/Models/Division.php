@@ -20,6 +20,7 @@ class Division extends Model
     protected $fillable = [
         'division_name',
         'division_status',
+        'division_company_id',
         'updated_at',
         'updated_at',
         'deleted_at',

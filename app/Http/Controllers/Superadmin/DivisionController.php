@@ -25,10 +25,12 @@ class DivisionController extends Controller
             $dir = request()->query('dir') ?? 'DESC';
             $search = request()->query('search');
             $status = request()->query('status');
+            $company_id = request()->query('company_id');
             
             $query = Division::query()
-                ->select('divisions.*')
-                ->where('deleted_at', null);
+                ->select('divisions.*', 'companies.company_name')
+                ->leftJoin('companies', 'divisions.division_company_id', '=', 'companies.company_id')
+                ->whereNull('divisions.deleted_at');
             
             if (!empty($search)) {
                 $query->where(function ($query) use ($search) {
@@ -40,13 +42,18 @@ class DivisionController extends Controller
                 $query->where('division_status', $status);
             }
 
+            if ($company_id && $company_id !== null) {
+                $query->where('division_company_id', $company_id);
+            }
+
             $query->orderBy($sort, $dir);
             $res = $query->paginate($limit, ['*'], 'page', $page);
 
             //get total data
             $queryTotal = Division::query()
                 ->select('1 as total')
-                ->where('deleted_at', null);
+                ->leftjoin('companies', 'division_company_id', '=', 'company_id')
+                ->where('divisions.deleted_at', null);
             $total_all = $queryTotal->count();
 
             $response = [
@@ -79,6 +86,7 @@ class DivisionController extends Controller
     {
         $validator = Validator::make(request()->all(),[
             'division_name' => 'required',
+            'company_id' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -98,6 +106,7 @@ class DivisionController extends Controller
 
         $data = Division::create([
             'division_name'     => request('division_name'),
+            'division_company_id'   => request('company_id'),
             'division_status'   => 'active',
             'created_at'        => now()->addHours(7),
             'updated_at'        => null,
@@ -132,8 +141,9 @@ class DivisionController extends Controller
         ];
 			
         $data = Division::query()
-            ->select('divisions.*')
-            ->where('Division_id', $id)
+            ->select('divisions.*', 'companies.company_name')
+            ->leftjoin('companies', 'division_company_id', '=', 'company_id')
+            ->where('division_id', $id)
             ->first();
 
         if ($data) {
@@ -179,6 +189,7 @@ class DivisionController extends Controller
         // } else {
             $validator = Validator::make($request->all(), [
                 'division_name'      => 'required',
+                'company_id'         => 'required',
                 'division_status'    => 'required|in:active,inactive',
             ]);
         // }
@@ -211,9 +222,10 @@ class DivisionController extends Controller
         // }
        
         $res = $check_data->update([
-            'division_name'          => $request->division_name,
+            'division_name'         => $request->division_name,
             // 'user_profile_url'      => isset($image_url) ? $image_url : $check_data->user_profile_url,
-            'division_status'        => $request->division_status,
+            'division_company_id'   => $request->company_id,
+            'division_status'       => $request->division_status,
             'updated_at'            => now()->addHours(7),
         ]);
 
