@@ -381,4 +381,74 @@ class MyPresenceController extends Controller
         return response()->json($output, 200);
 
     }
+
+    public function history()
+    {
+        $output = [
+            'code' => 400,
+            'status' => 'error',
+            'message' => 'Bad Request',
+            'result' => []
+        ];
+
+        try {
+            $page = request()->query('page');
+            $limit = request()->query('limit') ?? 10;
+            $sort = request()->query('sort') ?? 'schedule_date';
+            $dir = request()->query('dir') ?? 'DESC';
+
+            $query = Presence::query()
+                ->select(
+                    'presence_id',
+                    'presence_user_id',
+                    'presence_schedule_id',
+                    'schedule_date',
+                    'shift_name',
+                    'presence_in_time',
+                    'presence_out_time',
+                    DB::raw("TIMEDIFF(presence_out_time, presence_in_time) as working_hours"),
+                )
+                ->leftjoin('schedules', 'presence_schedule_id', '=', 'schedule_id')
+                ->leftjoin('shifts', 'schedule_shift_id', '=', 'shift_id')
+                ->where('presence.deleted_at', null)
+                ->where('presence_user_id', auth()->user()->user_id)
+                ->whereIn('presence_status', ['in', 'out']);
+
+            $query->orderBy($sort, $dir);
+            $res = $query->paginate($limit, ['*'], 'page', $page);
+
+            $queryTotal = Presence::query()
+                ->select('1 as total')
+                ->leftjoin('schedules', 'presence_schedule_id', '=', 'schedule_id')
+                ->leftjoin('shifts', 'schedule_shift_id', '=', 'shift_id')
+                ->where('presence.deleted_at', null)
+                ->where('presence_user_id', auth()->user()->user_id)
+                ->whereIn('presence_status', ['in', 'out']);
+            $total_all = $queryTotal->count();
+
+            $data = [
+                'current_page' => $res->currentPage(),
+                'from' => $res->firstItem(),
+                'last_page' => $res->lastPage(),
+                'per_page' => $res->perPage(),
+                'total' => $res->total(),
+                'total_all' => $total_all,
+                'data' => convertResponseArray($res->items()),
+            ];
+
+            $output = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Data ditemukan',
+                'result' => $data,
+            ];
+            
+        } catch (Exception $e) {
+            $output['code'] = 500;
+            $output['message'] = $output['message'];
+            // $output['message'] = $e->getMessage();
+        }
+
+        return response()->json($output, 200);
+    }
 }
