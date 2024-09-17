@@ -17,14 +17,18 @@ if (!function_exists('convertResponseSingle')) {
         return collect($data)->map(function ($value) {
             if ($value === null) {
                 return '';
+            // } elseif (is_string($value) && isJson($value)) {
+            //     return json_decode($value, true);
+            } else {
+                return $value;
             }
 
             // Check if the value is a valid JSON string
-            if (is_string($value) && isJson($value)) {
-                return json_decode($value, true); // Decode JSON to array
-            }
+            // if (is_string($value) && isJson($value)) {
+            //     return json_decode($value, true); // Decode JSON to array
+            // }
 
-            return $value;
+            // return $value;
         });
     }
 }

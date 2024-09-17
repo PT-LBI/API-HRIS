@@ -33,6 +33,7 @@ class EmployeeController extends Controller
             $division_id = request()->query('division_id');
             $start_date = request()->query('start_date');
             $end_date = request()->query('end_date');
+            $user_role = request()->query('user_role');
 
             $query = User::query()
                 ->select(
@@ -60,12 +61,13 @@ class EmployeeController extends Controller
                     'location_name',
                     'user_join_date',
                     'user_status',
+                    'user_role',
                     'users.created_at',
                 )
                 ->leftJoin('companies', 'user_company_id', '=', 'company_id')
                 ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
                 ->leftJoin('master_locations', 'user_location_id', '=', 'location_id')
-                ->where('user_role', 'staff')
+                ->where('user_role', '!=', 'superadmin')
                 ->where('users.deleted_at', null);
 
             if (!empty($search)) {
@@ -96,6 +98,10 @@ class EmployeeController extends Controller
                 $query->where('user_company_id', $company_id);
             }
 
+            if ($user_role && $user_role !== null) {
+                $query->where('user_role', $user_role);
+            }
+
             $query->orderBy($sort, $dir);
             $res = $query->paginate($limit, ['*'], 'page', $page);
 
@@ -105,7 +111,7 @@ class EmployeeController extends Controller
                 ->leftJoin('companies', 'user_company_id', '=', 'company_id')
                 ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
                 ->leftJoin('master_locations', 'user_location_id', '=', 'location_id')
-                ->where('user_role', 'staff')
+                ->where('user_role', '!==', 'superadmin')
                 ->where('users.deleted_at', null);
             $total_all = $queryTotal->count();
 
@@ -153,7 +159,11 @@ class EmployeeController extends Controller
             'user_join_date' => 'required',
             'user_gender' => 'required',
             'user_address' => 'required',
+            'user_last_education' => 'nullable|in:SD,SMP,SMA,Diploma,Sarjana',
             'user_status' => 'required|in:active,inactive',
+            'user_role' => 'required|in:admin,staff,hr,manager,owner',
+            'user_type' => 'required|in:trainee,contract,permanent',
+            'user_blood_type' => 'nullable|in:A,B,AB,O',
             'user_location_is_determined' => 'required',
             'user_marital_status' => 'in:single,married,divorced_alive,divorced_die',
             'user_profile_url' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -205,6 +215,7 @@ class EmployeeController extends Controller
             'user_location_is_determined' => request('user_location_is_determined'),
             'user_location_id' => request('user_location_id'),
             'user_role' => request('user_role'),
+            'user_type' => request('user_type'),
             'user_blood_type' => request('user_blood_type'),
             'user_bank_name' => request('user_bank_name'),
             'user_account_name' => request('user_account_name'),
@@ -272,6 +283,8 @@ class EmployeeController extends Controller
                 'user_location_id',
                 'location_name',
                 'user_status',
+                'user_role',
+                'user_type',
                 'user_join_date',
                 'user_profile_url'
             )
@@ -335,6 +348,10 @@ class EmployeeController extends Controller
             'user_gender' => 'required',
             'user_address' => 'required',
             'user_status' => 'required|in:active,inactive',
+            'user_role' => 'required|in:admin,staff,hr,manager,owner',
+            'user_last_education' => 'nullable|in:SD,SMP,SMA,Diploma,Sarjana',
+            'user_type' => 'required|in:trainee,contract,permanent',
+            'user_blood_type' => 'nullable|in:A,B,AB,O',
             'user_location_is_determined' => 'required',
             'user_marital_status' => 'in:single,married,divorced_alive,divorced_die',
         ];
@@ -421,6 +438,8 @@ class EmployeeController extends Controller
             'user_location_id'      => $request->user_location_id,
             'user_blood_type'       => $request->user_blood_type,
             'user_status'           => $request->user_status,
+            'user_role'             => $request->user_role,
+            'user_type'             => $request->user_type,
             'user_profile_url'      => isset($image_url) ? $image_url : $check_data->user_profile_url,
             'updated_at'            => now()->addHours(7),
         ]);
