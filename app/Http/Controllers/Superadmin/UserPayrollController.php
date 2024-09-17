@@ -42,10 +42,12 @@ class UserPayrollController extends Controller
             'user_payroll_communication' => request('user_payroll_communication'),
             'user_payroll_meal_allowance' => request('user_payroll_meal_allowance'),
             'user_payroll_transport' => request('user_payroll_transport'),
-            'user_payroll_add_income_json' => json_encode(request('user_payroll_add_income_json')),
+            'user_payroll_income_json' => json_encode(request('user_payroll_income_json')),
+            'user_payroll_income_total' => json_encode(request('user_payroll_income_total')),
             'user_payroll_absenteeism_cut' => request('user_payroll_absenteeism_cut'),
             'user_payroll_bpjs' => request('user_payroll_bpjs'),
-            'user_payroll_add_deduct_json' => json_encode(request('user_payroll_add_deduct_json')),
+            'user_payroll_deduct_json' => json_encode(request('user_payroll_deduct_json')),
+            'user_payroll_deduct_total' => json_encode(request('user_payroll_deduct_total')),
             'user_payroll_total_accepted' => request('user_payroll_total_accepted'),
             'user_payroll_status' => 'waiting',
             'created_at' => now()->addHours(7),
@@ -92,7 +94,7 @@ class UserPayrollController extends Controller
                 'code' => 200,
                 'status' => 'success',
                 'message' => 'Data ditemukan',
-                'result' => convertResponseSingle($data),
+                'result' => convertResponseJson($data),
             ];
         } else {
             $output = [
@@ -151,10 +153,12 @@ class UserPayrollController extends Controller
             'user_payroll_communication' => $request->user_payroll_communication,
             'user_payroll_meal_allowance' => $request->user_payroll_meal_allowance,
             'user_payroll_transport' => $request->user_payroll_transport,
-            'user_payroll_add_income_json' => json_encode($request->user_payroll_add_income_json),
+            'user_payroll_income_json' => json_encode($request->user_payroll_income_json),
+            'user_payroll_income_total' => $request->user_payroll_income_total,
             'user_payroll_absenteeism_cut' => $request->user_payroll_absenteeism_cut,
             'user_payroll_bpjs' => $request->user_payroll_bpjs,
-            'user_payroll_add_deduct_json' => json_encode($request->user_payroll_add_deduct_json),
+            'user_payroll_deduct_json' => json_encode($request->user_payroll_deduct_json),
+            'user_payroll_deduct_total' => $request->user_payroll_deduct_total,
             'user_payroll_total_accepted' => $request->user_payroll_total_accepted,
             'updated_at' => now()->addHours(7),
         ]);
@@ -164,7 +168,7 @@ class UserPayrollController extends Controller
                 'code'      => 200,
                 'status'    => 'success',
                 'message'   => 'Berhasil mengubah data',
-                'result'     => $check_data
+                'result'     => convertResponseJson($check_data)
             ];
         } else {
             $output = [

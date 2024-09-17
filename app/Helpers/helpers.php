@@ -33,6 +33,22 @@ if (!function_exists('convertResponseSingle')) {
     }
 }
 
+if (!function_exists('convertResponseJson')) {
+    function convertResponseJson($data_json)
+    {
+        return collect($data_json)->map(function ($value) {
+            if ($value === null) {
+                return '';
+            } elseif (is_string($value) && isJson($value)) {
+                return json_decode($value, true);
+            } else {
+                return $value;
+            }
+
+        });
+    }
+}
+
 if (!function_exists('isJson')) {
     function isJson($string)
     {
