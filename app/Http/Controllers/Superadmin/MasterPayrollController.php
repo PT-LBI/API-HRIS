@@ -128,10 +128,10 @@ class MasterPayrollController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'code' => 500,
+                'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
         }
 
         $check_data = MasterPayroll::where('payroll_user_id', request('payroll_user_id'))->first();
@@ -139,18 +139,18 @@ class MasterPayrollController extends Controller
             if ($check_data->deleted_at == null) {
                 if ($check_data->payroll_status === 'inactive') {
                     return response()->json([
-                        'code' => 500,
+                        'code' => 422,
                         'status' => 'error',
                         'message' => 'Data sudah ada, silahkan aktifkan kembali',
                         'result' => []
-                    ], 200);
+                    ], 422);
                 } else {
                     return response()->json([
-                        'code' => 500,
+                        'code' => 422,
                         'status' => 'error',
                         'message' => 'Data sudah ada',
                         'result' => []
-                    ], 200);
+                    ], 422);
                 }
             }
         }
@@ -304,7 +304,7 @@ class MasterPayrollController extends Controller
             ];
         } else {
             $output = [
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
@@ -320,11 +320,11 @@ class MasterPayrollController extends Controller
         
         if (!$check_data) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
-            ], 200);
+            ], 404);
         } else {
             if ($check_data->payroll_user_id !== $request->payroll_user_id) {
                 $check_data_available = MasterPayroll::where('payroll_user_id', $request->payroll_user_id)->first();
@@ -332,18 +332,18 @@ class MasterPayrollController extends Controller
                     if ($check_data_available->deleted_at == null) {
                         if ($check_data_available->payroll_status === 'inactive') {
                             return response()->json([
-                                'code' => 500,
+                                'code' => 422,
                                 'status' => 'error',
                                 'message' => 'Data sudah ada, silahkan aktifkan kembali',
                                 'result' => []
-                            ], 200);
+                            ], 422);
                         } else {
                             return response()->json([
-                                'code' => 500,
+                                'code' => 422,
                                 'status' => 'error',
                                 'message' => 'Data sudah ada',
                                 'result' => []
-                            ], 200);
+                            ], 422);
                         }
                     }
                 }
@@ -362,7 +362,7 @@ class MasterPayrollController extends Controller
                 'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
         }
        
         $res = $check_data->update([
@@ -402,11 +402,11 @@ class MasterPayrollController extends Controller
 
         if (!$check_data) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
-            ], 200);
+            ], 404);
         }
 
         //soft delete post

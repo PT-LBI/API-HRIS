@@ -84,10 +84,10 @@ class CompanyController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'code' => 500,
+                'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
         }
 
         // if (request()->file('image')) {
@@ -147,7 +147,7 @@ class CompanyController extends Controller
             ];
         } else {
             $output = [
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => '',
@@ -163,11 +163,11 @@ class CompanyController extends Controller
 
         if (!$check_data) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
-            ], 200);
+            ], 404);
         }
 
         //define validation rules
@@ -191,7 +191,7 @@ class CompanyController extends Controller
                 'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
         }
 
         // if ($request->file('image')) {
@@ -245,11 +245,11 @@ class CompanyController extends Controller
 
         if (!$check_data) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
-            ], 200);
+            ], 404);
         }
 
         //soft delete post

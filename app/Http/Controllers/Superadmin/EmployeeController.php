@@ -171,10 +171,10 @@ class EmployeeController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'code' => 500,
+                'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
         }
 
         if (request()->file('user_profile_url')) {
@@ -327,11 +327,11 @@ class EmployeeController extends Controller
 
         if (!$check_data) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
-            ], 200);
+            ], 404);
         }
 
         $rules = [
@@ -383,10 +383,10 @@ class EmployeeController extends Controller
         //check if validation fails
         if ($validator->fails()) {
             return response()->json([
-                'code' => 500,
+                'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
         }
 
         if ($request->file('user_profile_url')) {
@@ -469,11 +469,11 @@ class EmployeeController extends Controller
 
         if (!$check_data) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
-            ], 200);
+            ], 404);
         }
 
         // //delete image

@@ -25,10 +25,10 @@ class UserPayrollController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'code' => 500,
+                'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
         }
 
         $data = UserPayroll::create([
@@ -98,7 +98,7 @@ class UserPayrollController extends Controller
             ];
         } else {
             $output = [
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
@@ -114,19 +114,19 @@ class UserPayrollController extends Controller
         
         if (!$check_data) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
-            ], 200);
+            ], 404);
         } else {
             if ($check_data->user_payroll_status == 'sent') {
                 return response()->json([
-                    'code' => 500,
+                    'code' => 422,
                     'status' => 'error',
                     'message' => 'Gaji sudah dikirim, tidak bisa diubah',
                     'result' => []
-                ], 200);
+                ], 422);
             }
         }
 
@@ -143,7 +143,7 @@ class UserPayrollController extends Controller
                 'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
         }
        
         $res = $check_data->update([
@@ -188,19 +188,19 @@ class UserPayrollController extends Controller
         
         if (!$check_data) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
-            ], 200);
+            ], 404);
         } else {
             if ($check_data->user_payroll_status == 'sent') {
                 return response()->json([
-                    'code' => 500,
+                    'code' => 422,
                     'status' => 'error',
                     'message' => 'Gaji sudah dikirim',
                     'result' => []
-                ], 200);
+                ], 422);
             }
         }
 

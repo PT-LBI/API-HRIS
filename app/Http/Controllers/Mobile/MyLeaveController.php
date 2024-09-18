@@ -101,10 +101,18 @@ class MyLeaveController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'code' => 500,
+                'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
+        }
+
+        if (now()->addHours(7) > request('leave_start_date')) {
+            return response()->json([
+                'code' => 422,
+                'status' => 'error',
+                'message' => 'Tanggal mulai cuti tidak boleh kurang dari hari ini'
+            ], 422);
         }
 
         if (request()->file('leave_image')) {

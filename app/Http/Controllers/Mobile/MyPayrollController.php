@@ -102,7 +102,7 @@ class MyPayrollController extends Controller
             ];
         } else {
             $output = [
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],

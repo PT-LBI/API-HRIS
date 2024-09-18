@@ -99,10 +99,10 @@ class MasterLocationController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'code' => 500,
+                'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
         }
 
         $data = MasterLocation::create([
@@ -174,11 +174,11 @@ class MasterLocationController extends Controller
         
         if (!$check_data) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
-            ], 200);
+            ], 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -195,7 +195,7 @@ class MasterLocationController extends Controller
                 'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
         }
        
         $res = $check_data->update([
@@ -232,11 +232,11 @@ class MasterLocationController extends Controller
 
         if (!$check_data) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
-            ], 200);
+            ], 404);
         }
 
         //soft delete post

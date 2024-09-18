@@ -116,29 +116,29 @@ class MyPresenceController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'code' => 500,
+                'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
         }
 
         if (request('date') < now()->toDateString()) {
             return response()->json([
-                'code' => 500,
+                'code' => 422,
                 'status' => 'error',
                 'message' => 'Tanggal tidak boleh kurang dari hari ini',
                 'result' => []
-            ], 200);
+            ], 422);
         }
 
         $check_schedule = $this->checkSchedule(request('schedule_id'));
         if ($check_schedule === false) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Jadwal tidak ditemukan',
                 'result' => []
-            ], 200);
+            ], 404);
         }
 
         $check_presence = $this->checkPresence(request('schedule_id'), request('type'));
@@ -151,11 +151,11 @@ class MyPresenceController extends Controller
         
         if ($check_presence && isset($typeMessages[request('type')]) && $check_presence['presence_status'] == request('type')) {
             return response()->json([
-                'code' => 500,
+                'code' => 422,
                 'status' => 'error',
                 'message' => $typeMessages[request('type')],
                 'result' => []
-            ], 200);
+            ], 422);
         }
 
         if (auth()->user()->user_location_id || auth()->user()->user_location_id != null) {
@@ -168,11 +168,11 @@ class MyPresenceController extends Controller
             $distance = getDistanceBetweenPoints($user_location_latitude, $user_location_longitude, request('latitude'), request('longitude'));
             if ($distance > $user_location_radius) {
                 return response()->json([
-                    'code' => 500,
+                    'code' => 422,
                     'status' => 'error',
                     'message' => 'Anda berada diluar jangkauan lokasi kerja',
                     'result' => []
-                ], 200);
+                ], 422);
             }
         }
 
@@ -219,11 +219,11 @@ class MyPresenceController extends Controller
 
                 if (!$get_presence) {
                     return response()->json([
-                        'code' => 500,
+                        'code' => 422,
                         'status' => 'error',
                         'message' => 'Anda belum melakukan absen masuk',
                         'result' => []
-                    ], 200);
+                    ], 422);
                 }
 
                 Presence::where('presence_schedule_id', request('schedule_id'))
@@ -247,11 +247,11 @@ class MyPresenceController extends Controller
 
                 if (!$get_presence) {
                     return response()->json([
-                        'code' => 500,
+                        'code' => 422,
                         'status' => 'error',
                         'message' => 'Anda belum melakukan absen keluar',
                         'result' => []
-                    ], 200);
+                    ], 422);
                 }
 
                 Presence::create([
@@ -274,11 +274,11 @@ class MyPresenceController extends Controller
 
                 if (!$get_presence) {
                     return response()->json([
-                        'code' => 500,
+                        'code' => 422,
                         'status' => 'error',
                         'message' => 'Anda belum melakukan absen masuk lembur',
                         'result' => []
-                    ], 200);
+                    ], 422);
                 }
 
                 Presence::where('presence_schedule_id', request('schedule_id'))
@@ -350,11 +350,11 @@ class MyPresenceController extends Controller
 
         if (!$check_data) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
-            ], 200);
+            ], 404);
         }
 
         //soft delete post
