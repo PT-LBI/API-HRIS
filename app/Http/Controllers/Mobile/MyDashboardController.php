@@ -53,6 +53,7 @@ class MyDashboardController extends Controller
                 'leave_desc',
             )
             ->where('schedule_date', $date)
+            ->where('schedule_user_id', auth()->user()->user_id)
             ->leftJoin('shifts', 'shift_id', '=', 'schedule_shift_id')
             ->leftJoin('leave', 'leave_id', '=', 'schedule_leave_id')
             ->first();
