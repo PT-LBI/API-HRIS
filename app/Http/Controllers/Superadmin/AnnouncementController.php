@@ -31,7 +31,7 @@ class AnnouncementController extends Controller
             
             if (!empty($search)) {
                 $query->where(function ($query) use ($search) {
-                    $query->where('announcement_name', 'like', '%' . $search . '%');
+                    $query->where('announcement_title', 'like', '%' . $search . '%');
                 });
             }
 
