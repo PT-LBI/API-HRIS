@@ -41,13 +41,23 @@ class MyScheduleController extends Controller
         ->leftJoin('leave', 'leave_id', '=', 'schedule_leave_id')
         ->first();
 
-        $output = [
-            'code' => 200,
-            'status' => 'success',
-            'message' => 'Data ditemukan',
-            'result' => $data ? convertResponseSingle($data) : new \stdClass(),
-        ];
-
-        return response()->json($output, 200);
+        if ($data) {
+            $output = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Data ditemukan',
+                'result' => $data ? convertResponseSingle($data) : new \stdClass(),
+            ];
+    
+            return response()->json($output, 200);
+        } else {
+            $output = [
+                'code' => 404,
+                'status' => 'error',
+                'message' => 'Data tidak ditemukan',
+                'result' => new \stdClass(),
+            ];
+            return response()->json($output, 404);
+        }
     }
 }
