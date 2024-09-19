@@ -316,6 +316,7 @@ class MyPresenceController extends Controller
     public function checkSchedule($schedule_id) {
         $check_schedule = Schedule::where('schedule_id', $schedule_id)
             ->where('schedule_user_id', auth()->user()->user_id)
+            ->where('deleted_at', null)
             ->first();
 
         return $check_schedule ? $check_schedule : false;
@@ -325,17 +326,19 @@ class MyPresenceController extends Controller
         if ($type == 'in' || $type == 'out') {
             $check_presence = Presence::where('presence_schedule_id', $schedule_id)
                 ->where('presence_user_id', auth()->user()->user_id)
+                ->where('deleted_at', null)
                 ->where(function ($query) {
                     $query->where('presence_status', 'in')
-                          ->orWhere('presence_status', 'out');
+                        ->orWhere('presence_status', 'out');
                 })
                 ->first();
         } elseif ($type == 'ovt_in' || $type == 'ovt_out') {
             $check_presence = Presence::where('presence_schedule_id', $schedule_id)
                 ->where('presence_user_id', auth()->user()->user_id)
+                ->where('deleted_at', null)
                 ->where(function ($query) {
                     $query->where('presence_status', 'ovt_in')
-                          ->orWhere('presence_status', 'ovt_out');
+                        ->orWhere('presence_status', 'ovt_out');
                 })
                 ->first();
         }
