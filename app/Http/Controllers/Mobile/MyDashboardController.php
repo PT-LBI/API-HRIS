@@ -69,10 +69,6 @@ class MyDashboardController extends Controller
                 )
                 ->where('deleted_at', null)
                 ->where('presence_user_id', auth()->user()->user_id)
-                ->where(function ($query) {
-                    $query->where('presence_status', 'in')
-                            ->orWhere('presence_status', 'out');
-                })
                 ->where('presence_schedule_id', $data_schedule['schedule_id'])
                 ->orderBy('presence_id', 'DESC')
                 ->first();
