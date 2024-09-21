@@ -21,61 +21,53 @@ class DashboardController extends Controller
         ];
 
         $date = request()->query('date') ?? DATE('Y-m');
+        $today = Carbon::now()->day;
 
         try {
-            $queryTotalTrx = DB::table('transactions')
-                ->where('transaction_date', 'like', "$date%")
-                ->where('transaction_status', 'completed');
+            $queryPresence = DB::table('presence')
+                ->where('presence_in_time', 'like', "$today%")
+                ->where('presence_status', 'reguler')
+                ->whereNull('presence.deleted_at')
+                ->count('presence_id');
             
-            $totalTrx = $queryTotalTrx->sum('transaction_grandtotal');
-            $totalTrxTax = $queryTotalTrx->sum('transaction_tax');
             
-            $queryTotalPo = DB::table('pos')
-                ->where('po_date', 'like', "$date%")
-                ->where('po_status', 'completed');
+            $queryLeave = DB::table('leave_details')
+                ->leftJoin('leave', 'leave_id', '=', 'leave_detail_leave_id')
+                ->where('leave_detail_date', 'like', "$today%")
+                ->where('leave_status', 'approved')
+                ->whereNull('leave.deleted_at')
+                ->count('leave_detail_id');
 
-            $totalPo = $queryTotalPo->sum('po_grandtotal');
-            $totalPoTax = $queryTotalPo->sum('po_tax');
+            // $queryPresencelate = DB::table('presence')
+            //     ->where('presence_in_time', 'like', "$date%")
+            //     ->where('presence_status', 'reguler')
+            //     ->where('TIME(presence_in_time) > TIME(shifts.shift_start_time)')
+            //     ->whereNull('presence.deleted_at');
             
-            $queryTotalExpenses = DB::table('expenses')
-                ->where('expenses_date', 'like', "$date%")
-                ->where('expenses_status', 'approved')
-                ->sum('expenses_amount');
-
-            $queryTotalProduct = DB::table('master_products')
-                ->where('product_is_deleted', 0)
-                ->count('product_id');
-           
-            $queryTotalCustomer = DB::table('users')
-                ->where('user_is_deleted', 0)
-                ->where('user_role', 'customer')
+            // $totalTrx = $queryPresence->count('presence_id');
+            
+            
+            $queryEmployee = DB::table('users')
+                ->where('user_status', 'active')
+                ->whereNull('deleted_at')
+                ->where('user_role', '!==', 'superadmin')
+                // ->where('user_type', '!==', 'trainee')
                 ->count('user_id');
-            
-            $queryTotalSupplier = DB::table('suppliers')
-                ->where('supplier_is_deleted', 0)
-                ->count('supplier_id');
 
-            $total_tax = $totalTrxTax + $totalPoTax;
-            $income = $totalTrx - $totalPo - $queryTotalExpenses - $total_tax;
-            $total_profit = 0;
-            $total_loss = 0;
-
-            if ($income > 0) {
-                $total_profit = $income;
-            } else {
-                $total_loss = $income;
-            }
+            $queryEmployeeTrainee = DB::table('users')
+                ->where('user_status', 'active')
+                ->whereNull('deleted_at')
+                ->where('user_role', '!==', 'superadmin')
+                ->where('user_type', 'trainee')
+                ->count('user_id');
 
             $data = [
-                'total_trx' => intval($totalTrx),
-                'total_po' => intval($totalPo),
-                'total_expenses' => intval($queryTotalExpenses),
-                'total_product' => $queryTotalProduct,
-                'total_customer' => $queryTotalCustomer,
-                'total_supplier' => $queryTotalSupplier,
-                'total_tax' => $total_tax,
-                'total_profit' => $total_profit,
-                'total_loss' => $total_loss,
+                'total_presence' => intval($queryPresence),
+                'total_leave' => intval($queryLeave),
+                'total_presence_late' => 0,
+                'total_payroll_last_month' => 0,
+                'total_employee' => $queryEmployee,
+                'total_employee_trainee' => $queryEmployeeTrainee,
             ];
 
             $output = [
@@ -260,20 +252,7 @@ class DashboardController extends Controller
                     'schedule_date',
                     DB::raw("CONCAT(shifts.shift_start_time, ' - ', shifts.shift_finish_time) as working_hours"),
                     'presence_in_time',
-                    DB::raw("
-                        CASE
-                            WHEN TIME(presence_in_time) > TIME(shifts.shift_start_time) THEN 'Late'
-                            ELSE 'On Time'
-                        END as presence_in_status
-                    "),
                     'presence_out_time',
-                    DB::raw("
-                        CASE
-                            WHEN TIME(presence_out_time) >= TIME(shifts.shift_finish_time) THEN 'On Time'
-                            ELSE 'Late'
-                        END as presence_out_status
-                    "),
-                    'presence.presence_extra_time',
                     'schedules.schedule_status',
                     DB::raw("
                         CASE 
@@ -456,7 +435,7 @@ class DashboardController extends Controller
             $search = request()->query('search');
             
             $query = Announcement::query()
-                ->select('announcements.*')
+                ->select('announcement_id', 'announcement_title', 'created_at')
                 ->where('deleted_at', null);
             
             if (!empty($search)) {
