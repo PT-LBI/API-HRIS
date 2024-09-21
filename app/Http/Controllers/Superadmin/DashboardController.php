@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Superadmin;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\MasterProduct;
-use App\Models\PurchaseOrder;
-use App\Models\Transaction;
-use App\Models\UserLog;
+use App\Models\Leave;
+use App\Models\Presence;
+use App\Models\Announcement;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -233,7 +232,7 @@ class DashboardController extends Controller
         return response()->json($output, 200);
     }
 
-    public function user_log()
+    public function presence()
     {
         $output = [
             'code' => 400,
@@ -244,30 +243,96 @@ class DashboardController extends Controller
 
         try {
             $page = request()->query('page');
-            $limit = request()->query('limit') ?? 5;
-            $sort = request()->query('sort') ?? 'log_id';
+            $limit = request()->query('limit') ?? 10;
+            $sort = request()->query('sort') ?? 'shift_id';
             $dir = request()->query('dir') ?? 'DESC';
-
-            $query = UserLog::select(
-                'log_id',
-                'log_user_id',
-                'user_name as log_user_name',
-                'log_type',
-                'log_note',
-                'user_logs.created_at',
-            )
-            ->leftjoin('users', 'user_id', '=', 'log_user_id');
+            $search = request()->query('search');
+            $date = request()->query('date');
+            $company_id = request()->query('company_id');
+            $status = request()->query('status');
             
+            $query = Presence::query()
+                ->select(
+                    'presence.presence_id',
+                    'presence.presence_user_id',
+                    'users.user_name',
+                    'presence.presence_schedule_id',
+                    'schedule_date',
+                    DB::raw("CONCAT(shifts.shift_start_time, ' - ', shifts.shift_finish_time) as working_hours"),
+                    'presence_in_time',
+                    DB::raw("
+                        CASE
+                            WHEN TIME(presence_in_time) > TIME(shifts.shift_start_time) THEN 'Late'
+                            ELSE 'On Time'
+                        END as presence_in_status
+                    "),
+                    'presence_out_time',
+                    DB::raw("
+                        CASE
+                            WHEN TIME(presence_out_time) >= TIME(shifts.shift_finish_time) THEN 'On Time'
+                            ELSE 'Late'
+                        END as presence_out_status
+                    "),
+                    'presence.presence_extra_time',
+                    'schedules.schedule_status',
+                    DB::raw("
+                        CASE 
+                            WHEN presence.presence_status IN ('in', 'out') THEN 'reguler'
+                            ELSE 'overtime'
+                        END as presence_status
+                    "),
+                )
+                ->leftjoin('users', 'presence_user_id', '=', 'user_id')
+                ->leftjoin('schedules', 'schedule_id', '=', 'presence_schedule_id')
+                ->leftjoin('shifts', 'shift_id', '=', 'schedule_shift_id')
+                ->whereNull('presence.deleted_at');
+            
+            if (!empty($search)) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('user_name', 'like', '%' . $search . '%');
+                });
+            }
+
+            // Status condition
+            if ($status && $status !== null) {
+                $query->where(function ($query) use ($status) {
+                    if ($status == 'regular') {
+                        $query->whereIn('presence.presence_status', ['in', 'out']);
+                    } elseif ($status == 'overtime') {
+                        $query->whereIn('presence.presence_status', ['ovt_in', 'ovt_out']);
+                    }
+                });
+            }
+
+            if ($date && $date !== null) {
+                $query->where('schedule_date', $date);
+            }
+            
+            if ($company_id && $company_id !== null) {
+                $query->where('company_id', $company_id);
+            }
+
             $query->orderBy($sort, $dir);
             $res = $query->paginate($limit, ['*'], 'page', $page);
 
+            //get total data
+            $queryTotal = Presence::query()
+                ->select('1 as total')
+                ->leftjoin('users', 'presence_user_id', '=', 'user_id')
+                ->leftjoin('companies', 'user_company_id', '=', 'company_id')
+                ->leftjoin('schedules', 'schedule_id', '=', 'presence_schedule_id')
+                ->leftjoin('shifts', 'shift_id', '=', 'schedule_shift_id')
+                ->whereNull('presence.deleted_at');
+            $total_all = $queryTotal->count();
+
             $data = [
-                'result' => $res->items(),
                 'current_page' => $res->currentPage(),
                 'from' => $res->firstItem(),
                 'last_page' => $res->lastPage(),
                 'per_page' => $res->perPage(),
                 'total' => $res->total(),
+                'total_all' => $total_all,
+                'data' => convertResponseArray($res->items()),
             ];
 
             $output = [
@@ -276,12 +341,162 @@ class DashboardController extends Controller
                 'message' => 'Data ditemukan',
                 'result' => $data,
             ];
+            
         } catch (Exception $e) {
             $output['code'] = 500;
             $output['message'] = $output['message'];
             // $output['message'] = $e->getMessage();
         }
-       
+
+        return response()->json($output, 200);
+    }
+
+    public function leave()
+    {
+        $output = [
+            'code' => 400,
+            'status' => 'error',
+            'message' => 'Bad Request',
+            'result' => []
+        ];
+
+        try {
+            $page = request()->query('page');
+            $limit = request()->query('limit') ?? 10;
+            $sort = request()->query('sort') ?? 'leave.created_at';
+            $dir = request()->query('dir') ?? 'DESC';
+            $search = request()->query('search');
+            $start_date = request()->query('start_date');
+            $end_date = request()->query('end_date');
+            $status = request()->query('status');
+            
+            $query = Leave::query()
+                ->select(
+                    'leave_id',
+                    'leave_user_id',
+                    'user_name',
+                    'leave_type',
+                    'leave_start_date',
+                    'leave_end_date',
+                    'leave_status',
+                    'leave_desc',
+                    'leave.created_at',
+                )
+                ->where('leave.deleted_at', null)
+                ->leftjoin('users', 'leave_user_id', '=', 'user_id');
+            
+            if (!empty($search)) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('user_name', 'like', '%' . $search . '%');
+                });
+            }
+
+            if ($status && $status !== null) {
+                $query->where('leave_status', $status);
+            }
+            
+            if ($start_date && $start_date !== null) {
+                if ($end_date && $end_date !== null) {
+                    $query->whereBetween('leave_start_date', [$start_date, $end_date]);
+                } else{
+                    $query->where('leave_start_date', $start_date);
+                }
+            }
+            
+            $query->orderBy($sort, $dir);
+            $res = $query->paginate($limit, ['*'], 'page', $page);
+
+            //get total data
+            $queryTotal = Leave::query()
+                ->select('1 as total')
+                ->where('leave.deleted_at', null)
+                ->leftjoin('users', 'leave_user_id', '=', 'user_id');
+            $total_all = $queryTotal->count();
+
+            $data = [
+                'current_page' => $res->currentPage(),
+                'from' => $res->firstItem(),
+                'last_page' => $res->lastPage(),
+                'per_page' => $res->perPage(),
+                'total' => $res->total(),
+                'total_all' => $total_all,
+                'data' => convertResponseArray($res->items()),
+            ];
+
+            $output = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Data ditemukan',
+                'result' => $data,
+            ];
+            
+        } catch (Exception $e) {
+            $output['code'] = 500;
+            $output['message'] = $output['message'];
+            // $output['message'] = $e->getMessage();
+        }
+
+        return response()->json($output, 200);
+    }
+
+    public function announcement()
+    {
+        $output = [
+            'code' => 400,
+            'status' => 'error',
+            'message' => 'Bad Request',
+            'result' => []
+        ];
+
+        try {
+            $page = request()->query('page');
+            $limit = request()->query('limit') ?? 10;
+            $sort = request()->query('sort') ?? 'announcement_id';
+            $dir = request()->query('dir') ?? 'DESC';
+            $search = request()->query('search');
+            
+            $query = Announcement::query()
+                ->select('announcements.*')
+                ->where('deleted_at', null);
+            
+            if (!empty($search)) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('announcement_title', 'like', '%' . $search . '%');
+                });
+            }
+
+            $query->orderBy($sort, $dir);
+            $res = $query->paginate($limit, ['*'], 'page', $page);
+            
+            //get total data
+            $queryTotal = Announcement::query()
+                ->select('1 as total')
+                ->where('deleted_at', null);
+            $total_all = $queryTotal->count();
+
+            $response = [
+                'current_page' => $res->currentPage(),
+                'from' => $res->firstItem(),
+                'last_page' => $res->lastPage(),
+                'per_page' => $res->perPage(),
+                'total' => $res->total(),
+                'total_all' => $total_all,
+                'data' => convertResponseArray($res->items()),
+            ];
+
+            $output = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Data ditemukan',
+                'result' => $response,
+            ];
+            
+        } catch (Exception $e) {
+            $output['code'] = 500;
+            $output['message'] = $output['message'];
+            // $output['message'] = $e->getMessage();
+        }
+
         return response()->json($output, 200);
     }
 }
