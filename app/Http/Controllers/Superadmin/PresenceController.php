@@ -148,6 +148,8 @@ class PresenceController extends Controller
             'users.user_name',
             'users.user_company_id',
             'companies.company_name',
+            'users.user_division_id',
+            'divisions.division_name',
             'users.user_position',
             'presence.presence_schedule_id',
             'schedule_date',
@@ -174,6 +176,7 @@ class PresenceController extends Controller
         )
         ->leftjoin('users', 'presence_user_id', '=', 'user_id')
         ->leftjoin('companies', 'user_company_id', '=', 'company_id')
+        ->leftjoin('divisions', 'user_division_id', '=', 'division_id')
         ->leftjoin('schedules', 'schedule_id', '=', 'presence_schedule_id')
         ->leftjoin('shifts', 'shift_id', '=', 'schedule_shift_id')
         ->where('presence_id', $id)
