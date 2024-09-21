@@ -20,51 +20,58 @@ class DashboardController extends Controller
             'result' => []
         ];
 
-        $date = request()->query('date') ?? DATE('Y-m');
-        $today = Carbon::now()->day;
+        // $last_month = DATE('Y-m')-1;
+        $last_month = Carbon::now()->subMonth()->format('Y-m');
+        $today = request()->query('today') ?? Carbon::now()->day;
 
         try {
             $queryPresence = DB::table('presence')
-                ->where('presence_in_time', 'like', "$today%")
-                ->where('presence_status', 'reguler')
+                ->whereRaw('DATE(presence_in_time) = ?', [$today])
+                ->whereIn('presence_status', ['in', 'out'])
                 ->whereNull('presence.deleted_at')
-                ->count('presence_id');
-            
+                ->count();
             
             $queryLeave = DB::table('leave_details')
                 ->leftJoin('leave', 'leave_id', '=', 'leave_detail_leave_id')
-                ->where('leave_detail_date', 'like', "$today%")
+                ->where('leave_detail_date', "$today%")
                 ->where('leave_status', 'approved')
                 ->whereNull('leave.deleted_at')
                 ->count('leave_detail_id');
 
-            // $queryPresencelate = DB::table('presence')
-            //     ->where('presence_in_time', 'like', "$date%")
-            //     ->where('presence_status', 'reguler')
-            //     ->where('TIME(presence_in_time) > TIME(shifts.shift_start_time)')
-            //     ->whereNull('presence.deleted_at');
-            
-            // $totalTrx = $queryPresence->count('presence_id');
-            
+            $queryPresencelate = DB::table('presence')
+                ->join('schedules', 'presence_schedule_id', 'schedule_id')
+                ->join('shifts', 'schedule_shift_id', '=', 'shift_id')
+                ->whereRaw('DATE(presence_in_time) = ?', [$today])
+                ->whereIn('presence_status', ['in', 'out'])
+                ->whereRaw('TIME(presence.presence_in_time) > TIME(shifts.shift_start_time)') // Compare the times
+                ->whereNull('presence.deleted_at')
+                ->count('presence.presence_id');
             
             $queryEmployee = DB::table('users')
                 ->where('user_status', 'active')
                 ->whereNull('deleted_at')
-                ->where('user_role', '!==', 'superadmin')
+                ->where('user_role', '<>', 'superadmin')
+                // ->where('user_type', '!==', 'trainee')
+                ->count('user_id');
+                
+            $queryEmployee = DB::table('users')
+                ->where('user_status', 'active')
+                ->whereNull('deleted_at')
+                ->where('user_role', '<>', 'superadmin')
                 // ->where('user_type', '!==', 'trainee')
                 ->count('user_id');
 
             $queryEmployeeTrainee = DB::table('users')
                 ->where('user_status', 'active')
                 ->whereNull('deleted_at')
-                ->where('user_role', '!==', 'superadmin')
+                ->where('user_role', '<>', 'superadmin')
                 ->where('user_type', 'trainee')
                 ->count('user_id');
 
             $data = [
                 'total_presence' => intval($queryPresence),
                 'total_leave' => intval($queryLeave),
-                'total_presence_late' => 0,
+                'total_presence_late' => $queryPresencelate,
                 'total_payroll_last_month' => 0,
                 'total_employee' => $queryEmployee,
                 'total_employee_trainee' => $queryEmployeeTrainee,
