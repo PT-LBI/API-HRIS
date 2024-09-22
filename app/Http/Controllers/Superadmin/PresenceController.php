@@ -151,6 +151,8 @@ class PresenceController extends Controller
             'users.user_division_id',
             'divisions.division_name',
             'users.user_position',
+            'users.user_role',
+            'users.user_type',
             'presence.presence_schedule_id',
             'schedule_date',
             DB::raw('TIMEDIFF(shifts.shift_finish_time, shifts.shift_start_time) as shift_duration'),
