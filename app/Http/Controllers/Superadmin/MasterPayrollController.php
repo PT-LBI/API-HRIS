@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Superadmin;
 use Illuminate\Http\Request;
 use App\Models\MasterPayroll;
 use App\Models\UserPayroll;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
@@ -235,6 +236,31 @@ class MasterPayrollController extends Controller
             ->where('user_payroll_user_id', $user_id);
             $total_all = $queryTotal->count();
 
+            $user = User::query()
+                ->select(
+                    'user_id',
+                    'user_code',
+                    'email',
+                    'user_name',
+                    'user_phone_number',
+                    DB::raw('DATE(user_join_date) as user_join_date'),
+                    'user_bank_name',
+                    'user_account_name',
+                    'user_account_number',
+                    'user_company_id',
+                    'company_name',
+                    'user_division_id',
+                    'division_name',
+                    'user_position',
+                    'user_role',
+                    'user_type',
+                    'user_profile_url'
+                )
+            ->leftJoin('companies', 'user_company_id', '=', 'company_id')
+            ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
+            ->where('user_id', $user_id)
+            ->first();
+
             $data = [
                 'current_page' => $res->currentPage(),
                 'from' => $res->firstItem(),
@@ -242,6 +268,7 @@ class MasterPayrollController extends Controller
                 'per_page' => $res->perPage(),
                 'total' => $res->total(),
                 'total_all' => $total_all,
+                'header' => convertResponseSingle($user),
                 'data' => convertResponseArray($res->items()),
             ];
 

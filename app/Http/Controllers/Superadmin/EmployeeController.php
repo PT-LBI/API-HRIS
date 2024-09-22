@@ -59,7 +59,7 @@ class EmployeeController extends Controller
                     'division_name',
                     'user_location_id',
                     'location_name',
-                    'user_join_date',
+                    DB::raw('DATE(user_join_date) as user_join_date'),
                     'user_status',
                     'user_role',
                     'users.created_at',
@@ -285,7 +285,9 @@ class EmployeeController extends Controller
                 'user_status',
                 'user_role',
                 'user_type',
-                'user_join_date',
+                DB::raw('DATE(user_join_date) as user_join_date'),
+                DB::raw('TIMESTAMPDIFF(YEAR, user_join_date, CURDATE()) as years_since_join'),
+                DB::raw('DATEDIFF(CURDATE(), DATE_ADD(user_join_date, INTERVAL TIMESTAMPDIFF(YEAR, user_join_date, CURDATE()) YEAR)) as days_since_join'),
                 'user_profile_url'
             )
             ->leftJoin('companies', 'user_company_id', '=', 'company_id')
