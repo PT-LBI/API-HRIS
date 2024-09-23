@@ -169,7 +169,7 @@ class LeaveController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'leave_status'      => 'required|in:approved,rejected',
+            'leave_status' => 'required|in:approved,rejected',
         ]);
 
         //check if validation fails
@@ -188,10 +188,11 @@ class LeaveController extends Controller
                 'leave_status'  => $request->leave_status,
                 'updated_at'    => now()->addHours(7),
             ]);
-    
+
             if ($request->leave_status == 'approved') {
                 $this->create_schedule($check_data);
             }
+
 
             // $message = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
 
@@ -226,6 +227,8 @@ class LeaveController extends Controller
             //     ]);
             // }
 
+            DB::commit();
+
             $output = [
                 'code'      => 200,
                 'status'    => 'success',
@@ -249,7 +252,7 @@ class LeaveController extends Controller
             ->leftJoin('leave', 'leave_detail_leave_id', '=', 'leave_id')
             ->select('leave_detail_date', 'leave_user_id', 'leave_type', 'leave_desc')
             ->get();
-
+            
         if ($get_leave->count() > 0) {
            foreach ($get_leave as $value) {
                 $check_schedule = Schedule::where('schedule_date', $value['leave_detail_date'])
