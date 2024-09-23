@@ -60,6 +60,8 @@ class PresenceController extends Controller
                             ELSE 'overtime'
                         END as presence_status
                     "),
+                    'presence.presence_in_photo',
+                    'presence.presence_out_photo',
                 )
                 ->leftjoin('users', 'presence_user_id', '=', 'user_id')
                 ->leftjoin('companies', 'user_company_id', '=', 'company_id')

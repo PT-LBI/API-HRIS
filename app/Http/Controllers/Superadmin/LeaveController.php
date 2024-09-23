@@ -29,7 +29,7 @@ class LeaveController extends Controller
         try {
             $page = request()->query('page');
             $limit = request()->query('limit') ?? 10;
-            $sort = request()->query('sort') ?? 'shift_id';
+            $sort = request()->query('sort') ?? 'leave_id';
             $dir = request()->query('dir') ?? 'DESC';
             $search = request()->query('search');
             $start_date = request()->query('start_date');
@@ -49,6 +49,7 @@ class LeaveController extends Controller
                     'leave_start_date',
                     'leave_end_date',
                     'leave_status',
+                    'leave_image',
                     'leave_desc',
                 )
                 ->where('leave.deleted_at', null)
@@ -160,11 +161,11 @@ class LeaveController extends Controller
         
         if (!$check_data) {
             return response()->json([
-                'code' => 500,
+                'code' => 404,
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => [],
-            ], 200);
+            ], 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -177,7 +178,7 @@ class LeaveController extends Controller
                 'code' => 422,
                 'status' => 'error',
                 'message' => $validator->messages()
-            ], 200);
+            ], 422);
         }
 
         try {
@@ -195,8 +196,9 @@ class LeaveController extends Controller
             // $message = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
 
             // $get_user = User::find($check_data->leave_user_id);
-            // Kirim notifikasi
+            // // Kirim notifikasi
             // $is_send = Notification::send($get_user, new SendNotif($message));
+            // // dd($)
             // dd($is_send);
 
 
