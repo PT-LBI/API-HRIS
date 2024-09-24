@@ -28,8 +28,29 @@ class CompanyController extends Controller
             $status = request()->query('status');
             
             $query = Company::query()
-                ->select('companies.*')
-                ->where('deleted_at', null);
+                ->select(
+                    'companies.*',
+                    DB::raw('COUNT(CASE 
+                        WHEN users.user_gender = "female"
+                        AND users.user_status = "active"
+                        AND users.deleted_at IS NULL
+                        AND users.user_role = "staff" THEN 1
+                        END) as total_female_staff'),
+                    DB::raw('COUNT(CASE 
+                        WHEN users.user_gender = "male"
+                        AND users.user_status = "active"
+                        AND users.deleted_at IS NULL
+                        AND users.user_role = "staff" THEN 1 
+                        END) as total_male_staff'),
+                    DB::raw('COUNT(CASE 
+                        WHEN users.user_role = "staff" 
+                        AND users.user_status = "active"
+                        AND users.deleted_at IS NULL THEN 1 
+                        END) as total_staff'),
+                )
+                ->leftJoin('users', 'companies.company_id', '=', 'users.user_company_id')
+                ->where('companies.deleted_at', null)
+                ->groupBy('companies.company_id');
             
             if (!empty($search)) {
                 $query->where(function ($query) use ($search) {
@@ -47,7 +68,8 @@ class CompanyController extends Controller
             //get total data
             $queryTotal = DB::table('companies')
                 ->select('1 as total')
-                ->where('deleted_at', null);
+                ->leftJoin('users', 'companies.company_id', '=', 'users.user_company_id')
+                ->where('companies.deleted_at', null);
             $total_all = $queryTotal->count();
 
             $response = [
