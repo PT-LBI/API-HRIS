@@ -57,7 +57,9 @@ class ScheduleController extends Controller
     private function getUserQuery($division_id, $company_id, $sort, $dir)
     {
         $query = User::where('user_status', 'active')
-            ->whereNull('deleted_at');
+            ->leftjoin('divisions', 'division_id', '=', 'user_division_id')
+            ->leftjoin('companies', 'company_id', '=', 'user_company_id')
+            ->whereNull('users.deleted_at');
 
         if ($division_id) {
             $query->where('division_id', $division_id);
@@ -89,6 +91,7 @@ class ScheduleController extends Controller
                 ->whereNull('schedules.deleted_at')
                 ->leftjoin('shifts', 'shift_id', '=', 'schedule_shift_id')
                 ->leftjoin('leave', 'leave_id', '=', 'schedule_leave_id')
+                ->leftjoin('users', 'user_id', '=', 'schedule_user_id')
                 ->select('schedules.*', 'shift_name', 'leave_type', 'leave_desc')
                 ->first();
 

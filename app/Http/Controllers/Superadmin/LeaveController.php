@@ -193,6 +193,8 @@ class LeaveController extends Controller
                 $this->create_schedule($check_data);
             }
 
+            // Kirim notifikasi
+            $send = sendNotification();
 
             // $message = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
 
@@ -252,7 +254,7 @@ class LeaveController extends Controller
             ->leftJoin('leave', 'leave_detail_leave_id', '=', 'leave_id')
             ->select('leave_detail_date', 'leave_user_id', 'leave_type', 'leave_desc')
             ->get();
-            
+
         if ($get_leave->count() > 0) {
            foreach ($get_leave as $value) {
                 $check_schedule = Schedule::where('schedule_date', $value['leave_detail_date'])

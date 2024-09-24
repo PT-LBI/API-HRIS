@@ -94,3 +94,68 @@ if (!function_exists('getDistanceBetweenPoints')) {
     }
 }
 
+if (!function_exists('sendNotification')) {
+    function sendNotification()
+    {
+        // Firebase API URL
+        $url = 'https://fcm.googleapis.com/fcm/send';
+
+        // Firebase server key (you can store it in your .env file for security)
+        $serverKey = env('FCM_SERVER_KEY');
+
+        // The notification payload
+        $notification = [
+            'title' => 'Test Notification',
+            'body'  => 'This is a test message',
+            'sound' => 'default',
+        ];
+
+        // Target device token or topic
+        // $token = 'YOUR_DEVICE_TOKEN';
+        $token = 'e6bf975f-16a5-40e9-8de7-731a0f4f';
+
+        // Data payload (optional)
+        $data = [
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ];
+
+        // Fields required by FCM
+        $fields = [
+            'to' => $token,  // You can also use 'topic' => 'your-topic'
+            'notification' => $notification,
+            'data' => $data,
+        ];
+
+        // Set headers for the request
+        $headers = [
+            'Authorization: key=' . $serverKey,
+            'Content-Type: application/json',
+        ];
+
+        // Initialize cURL session
+        $ch = curl_init();
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+
+        // Execute the cURL request
+        $response = curl_exec($ch);
+
+        // Close the cURL session
+        curl_close($ch);
+
+        // Handle the response
+        if ($response === false) {
+            return response()->json(['message' => 'Notification failed'], 500);
+        }
+
+        return response()->json(['message' => 'Notification sent successfully', 'response' => json_decode($response)], 200);
+    }
+}
+
