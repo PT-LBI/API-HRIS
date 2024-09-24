@@ -46,6 +46,10 @@ class UserPayroll extends Model
 
     protected $casts = [
         'user_payroll_value' => 'float',
+        'user_payroll_meal_allowance' => 'float',
+        'user_payroll_absenteeism_cut_total' => 'float',
+        'user_payroll_income_total' => 'float',
+        'user_payroll_deduct_total' => 'float',
         'user_payroll_overtime_hour_total' => 'float',
         'user_payroll_overtime_hour' => 'float',
         'user_payroll_transport' => 'float',
