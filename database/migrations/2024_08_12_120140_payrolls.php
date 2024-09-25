@@ -37,7 +37,8 @@ return new class extends Migration
             $table->decimal('user_payroll_communication', 10, 2)->default(0);
             $table->decimal('user_payroll_absenteeism_cut_total', 4, 2)->default(0);
             $table->decimal('user_payroll_absenteeism_cut', 10, 2)->default(0);
-            $table->decimal('user_payroll_bpjs', 10, 2)->default(0);
+            $table->decimal('user_payroll_bpjs_kes', 10, 2)->default(0);
+            $table->decimal('user_payroll_bpjs_tk', 10, 2)->default(0);
             $table->decimal('user_payroll_total_accepted', 12, 2)->default(0);
             $table->string('user_payroll_status', 20)->default('unpaid');
             $table->timestamp('created_at')->nullable();
