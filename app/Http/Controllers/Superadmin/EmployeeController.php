@@ -111,7 +111,7 @@ class EmployeeController extends Controller
                 ->leftJoin('companies', 'user_company_id', '=', 'company_id')
                 ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
                 ->leftJoin('master_locations', 'user_location_id', '=', 'location_id')
-                ->where('user_role', '!==', 'superadmin')
+                ->where('user_role', '!=', 'superadmin')
                 ->where('users.deleted_at', null);
             $total_all = $queryTotal->count();
 
