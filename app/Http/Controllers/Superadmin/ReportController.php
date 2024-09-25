@@ -177,9 +177,13 @@ class ReportController extends Controller
                 ->get()
                 ->keyBy('presence_date'); // Index by presence_date for faster lookup
 
-                $results = [];
+            $results = [];
+            $absence = 0;
+            $alpha = 0;
+            $leave = 0;
+            $vacation = 0;
 
-                foreach($dates as $day) {
+            foreach($dates as $day) {
                 $schedule = $schedules->get($day);
                 $presence = $presences->get($day);
 
@@ -188,6 +192,7 @@ class ReportController extends Controller
                     if ($schedule->schedule_status == 'leave' || $schedule->schedule_status == 'permission') {
                         $status = 'Ijin/Cuti';
                         $remark = '';
+                        $leave++;
                     } else {
                         // If presence exists, check the time
                         if ($presence) {
@@ -201,14 +206,17 @@ class ReportController extends Controller
                                 $status = $presence->presence_in_time . ' - ' . $presence->presence_out_time;
                                 $remark = 'On Time';
                             }
+                            $absence++;
                         } else {
                             $status = 'Alpha'; // No presence data, considered absent
                             $remark = '';
+                            $alpha++;
                         }
                     }
                 } else {
                     $status = 'Libur'; // No schedule for this day
                     $remark = '';
+                    $vacation++;
                 }
 
                 // Save the result for this day
@@ -223,13 +231,8 @@ class ReportController extends Controller
                 ->select(
                     'user_id',
                     'user_code',
-                    'email',
                     'user_name',
-                    'user_phone_number',
                     DB::raw('DATE(user_join_date) as user_join_date'),
-                    'user_bank_name',
-                    'user_account_name',
-                    'user_account_number',
                     'user_company_id',
                     'company_name',
                     'user_division_id',
@@ -243,6 +246,12 @@ class ReportController extends Controller
             ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
             ->where('user_id', $user_id)
             ->first();
+
+            $user['period_presence'] = $year . '-' . $month;
+            $user['presence'] = $absence;
+            $user['alpha'] = $alpha;
+            $user['leave'] = $leave;
+            $user['vacation'] = $vacation;
 
             $data = [
                 'header' => convertResponseSingle($user),
