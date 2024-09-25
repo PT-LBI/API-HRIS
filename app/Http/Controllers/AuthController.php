@@ -43,7 +43,7 @@ class AuthController extends Controller
             $user = auth()->user();
 
             // Check if the user has a role of 'finance' or 'superadmin'
-            if (!in_array($user->user_role, ['superadmin','admin','finance','warehouse','owner', 'hr'])) {
+            if (!in_array($user->user_role, ['superadmin','admin','finance','manager','owner', 'hr'])) {
                 return response()->json([
                     'code' => 403,
                     'status' => 'Forbidden',
