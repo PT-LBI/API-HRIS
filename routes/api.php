@@ -18,6 +18,7 @@ use App\Http\Controllers\Superadmin\ScheduleController;
 use App\Http\Controllers\Superadmin\LeaveController;
 use App\Http\Controllers\Superadmin\PresenceController;
 use App\Http\Controllers\Superadmin\MasterLocationController;
+use App\Http\Controllers\Superadmin\ReportController;
 use App\Http\Controllers\Mobile\MyProfileController;
 use App\Http\Controllers\Mobile\MyAnnouncementController;
 use App\Http\Controllers\Mobile\MyScheduleController;
@@ -165,6 +166,11 @@ Route::middleware('auth:api')->group(function() {
     Route::group(['prefix' => 'profile'], function () {
         Route::get('', [ProfileController::class, 'index']);
         Route::patch('/update/{id}', [ProfileController::class, 'update']);
+    });
+  
+    Route::group(['prefix' => 'report'], function () {
+        Route::get('/presence', [ReportController::class, 'presence']);
+        Route::get('/presence_user', [ReportController::class, 'presence_user']);
     });
 
 
