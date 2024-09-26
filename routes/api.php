@@ -171,6 +171,9 @@ Route::middleware('auth:api')->group(function() {
     Route::group(['prefix' => 'report'], function () {
         Route::get('/presence', [ReportController::class, 'presence']);
         Route::get('/presence_user', [ReportController::class, 'presence_user']);
+        Route::get('/payroll', [ReportController::class, 'payroll']);
+        Route::get('/payroll_company', [ReportController::class, 'payroll_company']);
+        Route::get('/payroll_user', [ReportController::class, 'payroll_user']);
     });
 
 

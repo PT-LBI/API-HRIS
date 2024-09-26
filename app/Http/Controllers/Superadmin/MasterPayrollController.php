@@ -256,10 +256,10 @@ class MasterPayrollController extends Controller
                     'user_type',
                     'user_profile_url'
                 )
-            ->leftJoin('companies', 'user_company_id', '=', 'company_id')
-            ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
-            ->where('user_id', $user_id)
-            ->first();
+                ->leftJoin('companies', 'user_company_id', '=', 'company_id')
+                ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
+                ->where('user_id', $user_id)
+                ->first();
 
             $data = [
                 'current_page' => $res->currentPage(),

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Superadmin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\Company;
+use App\Models\UserPayroll;
 use Carbon\Carbon;
 
 class ReportController extends Controller
@@ -286,5 +288,532 @@ class ReportController extends Controller
         }
 
         return $dates;
+    }
+
+    public function payroll()
+    {
+        $output = [
+            'code' => 400,
+            'status' => 'error',
+            'message' => 'Bad Request',
+            'result' => []
+        ];
+
+        try {
+            $page = request()->query('page');
+            $limit = request()->query('limit') ?? 10;
+            $sort = request()->query('sort') ?? 'company_name';
+            $dir = request()->query('dir') ?? 'DESC';
+            $year = request()->query('year') ?? date('Y');
+            
+            $query = Company::query()
+            ->select(
+                'company_id',
+                'company_name',
+                DB::raw("
+                    (SELECT COALESCE(CAST(COUNT(user_id) AS SIGNED), 0)
+                    FROM users
+                    WHERE user_company_id = company_id
+                    AND user_role NOT IN ('superadmin', 'owner')
+                    AND deleted_at IS NULL
+                    AND user_status = 'active'
+                    ) AS total_employee
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_value) AS SIGNED), 0)
+                    FROM user_payrolls
+                    LEFT JOIN users ON users.user_id = user_payrolls.user_payroll_user_id
+                    WHERE users.user_company_id = company_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_payroll_value
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_overtime_hour_total) AS SIGNED), 0)
+                    FROM user_payrolls
+                    LEFT JOIN users ON users.user_id = user_payrolls.user_payroll_user_id
+                    WHERE users.user_company_id = company_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_overtime_hours
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_transport) AS SIGNED),0)
+                    FROM user_payrolls
+                    LEFT JOIN users ON users.user_id = user_payrolls.user_payroll_user_id
+                    WHERE users.user_company_id = company_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_transport
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_communication) AS SIGNED),0)
+                    FROM user_payrolls
+                    LEFT JOIN users ON users.user_id = user_payrolls.user_payroll_user_id
+                    WHERE users.user_company_id = company_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_communication
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_meal_allowance) AS SIGNED),0)
+                    FROM user_payrolls
+                    LEFT JOIN users ON users.user_id = user_payrolls.user_payroll_user_id
+                    WHERE users.user_company_id = company_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_meal_allowance
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_income_total) AS SIGNED),0)
+                    FROM user_payrolls
+                    LEFT JOIN users ON users.user_id = user_payrolls.user_payroll_user_id
+                    WHERE users.user_company_id = company_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_income
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_absenteeism_cut) AS SIGNED),0)
+                    FROM user_payrolls
+                    LEFT JOIN users ON users.user_id = user_payrolls.user_payroll_user_id
+                    WHERE users.user_company_id = company_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_absenteeism_cut
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_bpjs_kes) AS SIGNED),0)
+                    FROM user_payrolls
+                    LEFT JOIN users ON users.user_id = user_payrolls.user_payroll_user_id
+                    WHERE users.user_company_id = company_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_bpjs_kes
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_bpjs_tk) AS SIGNED),0)
+                    FROM user_payrolls
+                    LEFT JOIN users ON users.user_id = user_payrolls.user_payroll_user_id
+                    WHERE users.user_company_id = company_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_bpjs_tk
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_deduct_total) AS SIGNED),0)
+                    FROM user_payrolls
+                    LEFT JOIN users ON users.user_id = user_payrolls.user_payroll_user_id
+                    WHERE users.user_company_id = company_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_deductions
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_total_accepted) AS SIGNED),0)
+                    FROM user_payrolls
+                    LEFT JOIN users ON users.user_id = user_payrolls.user_payroll_user_id
+                    WHERE users.user_company_id = company_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_accepted
+                "),
+            )
+            ->whereNull('companies.deleted_at');
+            
+            $query->orderBy($sort, $dir);
+            $res = $query->paginate($limit, ['*'], 'page', $page);
+
+            // get total data
+            $queryTotal = Company::query()
+                ->select('1 as total')
+                ->where('companies.deleted_at', null);
+            $total_all = $queryTotal->count();
+
+            $data = [
+                'current_page' => $res->currentPage(),
+                'from' => $res->firstItem(),
+                'last_page' => $res->lastPage(),
+                'per_page' => $res->perPage(),
+                'total' => $res->total(),
+                'total_all' => $total_all,
+                'data' => convertResponseArray($res->items()),
+            ];
+
+            $output = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Data ditemukan',
+                'result' => $data,
+            ];
+            
+        } catch (Exception $e) {
+            $output['code'] = 500;
+            $output['message'] = $output['message'];
+            // $output['message'] = $e->getMessage();
+        }
+
+        return response()->json($output, 200);
+    }
+
+    public function payroll_company()
+    {
+        $output = [
+            'code' => 400,
+            'status' => 'error',
+            'message' => 'Bad Request',
+            'result' => []
+        ];
+
+        try {
+            $page = request()->query('page');
+            $limit = request()->query('limit') ?? 10;
+            $sort = request()->query('sort') ?? 'user_id';
+            $dir = request()->query('dir') ?? 'DESC';
+            $search = request()->query('search');
+            $year = request()->query('year') ?? date('Y');
+            $company_id = request()->query('company_id') ?? 1;
+            
+            $query = User::query()
+            ->select(
+                'users.user_id',
+                'users.user_name',
+                'users.user_code',
+                'users.user_division_id',
+                'divisions.division_name',
+                'users.user_position',
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_value) AS SIGNED), 0)
+                    FROM user_payrolls
+                    WHERE user_payrolls.user_payroll_user_id = users.user_id
+                    AND users.user_id = user_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_payroll_value
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_overtime_hour_total) AS SIGNED), 0)
+                    FROM user_payrolls
+                    WHERE user_payrolls.user_payroll_user_id = users.user_id
+                    AND users.user_id = user_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_overtime_hours
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_transport) AS SIGNED),0)
+                    FROM user_payrolls
+                    WHERE user_payrolls.user_payroll_user_id = users.user_id
+                    AND users.user_id = user_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_transport
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_communication) AS SIGNED),0)
+                    FROM user_payrolls
+                    WHERE user_payrolls.user_payroll_user_id = users.user_id
+                    AND users.user_id = user_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_communication
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_meal_allowance) AS SIGNED),0)
+                    FROM user_payrolls
+                    WHERE user_payrolls.user_payroll_user_id = users.user_id
+                    AND users.user_id = user_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_meal_allowance
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_income_total) AS SIGNED),0)
+                    FROM user_payrolls
+                    WHERE user_payrolls.user_payroll_user_id = users.user_id
+                    AND users.user_id = user_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_income
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_absenteeism_cut) AS SIGNED),0)
+                    FROM user_payrolls
+                    WHERE user_payrolls.user_payroll_user_id = users.user_id
+                    AND users.user_id = user_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_absenteeism_cut
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_bpjs_kes) AS SIGNED),0)
+                    FROM user_payrolls
+                    WHERE user_payrolls.user_payroll_user_id = users.user_id
+                    AND users.user_id = user_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_bpjs_kes
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_bpjs_tk) AS SIGNED),0)
+                    FROM user_payrolls
+                    WHERE user_payrolls.user_payroll_user_id = users.user_id
+                    AND users.user_id = user_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_bpjs_tk
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_deduct_total) AS SIGNED),0)
+                    FROM user_payrolls
+                    WHERE user_payrolls.user_payroll_user_id = users.user_id
+                    AND users.user_id = user_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_deductions
+                "),
+                DB::raw("
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_total_accepted) AS SIGNED),0)
+                    FROM user_payrolls
+                    WHERE user_payrolls.user_payroll_user_id = users.user_id
+                    AND users.user_id = user_id
+                    AND users.user_role NOT IN ('superadmin', 'owner')
+                    AND user_payrolls.user_payroll_status = 'sent'
+                    AND user_payrolls.user_payroll_year = $year
+                    AND users.deleted_at IS NULL
+                    AND users.user_status = 'active'
+                    AND user_payrolls.deleted_at IS NULL
+                    ) AS total_accepted
+                "),
+            )
+            ->leftjoin('divisions', 'user_division_id', 'division_id')
+            ->leftJoin('companies', 'user_company_id', 'company_id')
+            ->whereNull('users.deleted_at')
+            ->whereNotIn('user_role', ['superadmin', 'owner'])
+            ->where('user_status', 'active')
+            ->where('user_company_id', $company_id);
+
+            if (!empty($search)) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('user_name', 'like', '%' . $search . '%')
+                        ->orWhere('user_code', 'like', '%' . $search . '%');
+                });
+            }
+            
+            $query->orderBy($sort, $dir);
+            $res = $query->paginate($limit, ['*'], 'page', $page);
+
+            // get total data
+            $queryTotal = User::query()
+                ->select('1 as total')
+                ->leftjoin('divisions', 'user_division_id', 'division_id')
+                ->leftJoin('companies', 'user_company_id', 'company_id')
+                ->whereNull('users.deleted_at')
+                ->whereNotIn('user_role', ['superadmin', 'owner'])
+                ->where('user_status', 'active')
+                ->where('user_company_id', $company_id);
+            $total_all = $queryTotal->count();
+
+            $data = [
+                'current_page' => $res->currentPage(),
+                'from' => $res->firstItem(),
+                'last_page' => $res->lastPage(),
+                'per_page' => $res->perPage(),
+                'total' => $res->total(),
+                'total_all' => $total_all,
+                'data' => convertResponseArray($res->items()),
+            ];
+
+            $output = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Data ditemukan',
+                'result' => $data,
+            ];
+            
+        } catch (Exception $e) {
+            $output['code'] = 500;
+            $output['message'] = $output['message'];
+            // $output['message'] = $e->getMessage();
+        }
+
+        return response()->json($output, 200);
+    }
+
+    public function payroll_user()
+    {
+        $output = [
+            'code' => 400,
+            'status' => 'error',
+            'message' => 'Bad Request',
+            'result' => []
+        ];
+
+        try {
+            $page = request()->query('page');
+            $limit = request()->query('limit') ?? 10;
+            $year = request()->query('year') ?? date('Y');
+            $user_id = request()->query('user_id');
+            
+            $query = UserPayroll::query()
+            ->select(
+                DB::raw("DATE_FORMAT(CONCAT(user_payroll_year, '-', user_payroll_month, '-01'), '%M %Y') as payroll_period"),
+                DB::raw("COALESCE(CAST(SUM(user_payroll_value) AS SIGNED), 0) AS total_payroll_value"),
+                DB::raw("COALESCE(CAST(SUM(user_payroll_overtime_hour_total) AS SIGNED), 0) AS total_overtime_hours"),
+                DB::raw("COALESCE(CAST(SUM(user_payroll_transport) AS SIGNED), 0) AS total_transport"),
+                DB::raw("COALESCE(CAST(SUM(user_payroll_communication) AS SIGNED), 0) AS total_communication"),
+                DB::raw("COALESCE(CAST(SUM(user_payroll_meal_allowance) AS SIGNED), 0) AS total_meal_allowance"),
+                DB::raw("COALESCE(CAST(SUM(user_payroll_income_total) AS SIGNED), 0) AS total_income"),
+                DB::raw("COALESCE(CAST(SUM(user_payroll_absenteeism_cut) AS SIGNED), 0) AS total_absenteeism_cut"),
+                DB::raw("COALESCE(CAST(SUM(user_payroll_bpjs_kes) AS SIGNED), 0) AS total_bpjs_kes"),
+                DB::raw("COALESCE(CAST(SUM(user_payroll_bpjs_tk) AS SIGNED), 0) AS total_bpjs_tk"),
+                DB::raw("COALESCE(CAST(SUM(user_payroll_deduct_total) AS SIGNED), 0) AS total_deductions"),
+                DB::raw("COALESCE(CAST(SUM(user_payroll_total_accepted) AS SIGNED), 0) AS total_accepted")
+            )
+            ->where('user_payroll_user_id', $user_id)
+            ->where('user_payroll_year', $year)
+            ->whereNull('user_payrolls.deleted_at')
+            ->groupBy('user_payroll_year', 'user_payroll_month')
+            ->orderBy(DB::raw("DATE_FORMAT(CONCAT(user_payroll_year, '-', user_payroll_month, '-01'), '%Y-%m')"), 'desc');
+
+            $res = $query->paginate($limit, ['*'], 'page', $page);
+
+            // get total data
+            $queryTotal = UserPayroll::query()
+                ->select('1 as total')
+                ->where('user_payroll_user_id', $user_id)
+                ->where('user_payroll_year', $year)
+                ->whereNull('user_payrolls.deleted_at');
+            $total_all = $queryTotal->count();
+
+            $user = User::query()
+                ->select(
+                    'user_id',
+                    'user_code',
+                    'email',
+                    'user_name',
+                    'user_company_id',
+                    'company_name',
+                    'user_division_id',
+                    'division_name',
+                    'user_position',
+                    'user_role',
+                    'user_type',
+                    'user_profile_url'
+                )
+                ->leftJoin('companies', 'user_company_id', '=', 'company_id')
+                ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
+                ->where('user_id', $user_id)
+                ->first();
+
+            $data = [
+                'current_page' => $res->currentPage(),
+                'from' => $res->firstItem(),
+                'last_page' => $res->lastPage(),
+                'per_page' => $res->perPage(),
+                'total' => $res->total(),
+                'total_all' => $total_all,
+                'header' => convertResponseSingle($user),
+                'data' => convertResponseArray($res->items()),
+            ];
+
+            $output = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Data ditemukan',
+                'result' => $data,
+            ];
+            
+        } catch (Exception $e) {
+            $output['code'] = 500;
+            $output['message'] = $output['message'];
+            // $output['message'] = $e->getMessage();
+        }
+
+        return response()->json($output, 200);
     }
 }
