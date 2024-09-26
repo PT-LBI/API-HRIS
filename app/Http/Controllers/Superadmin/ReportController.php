@@ -333,7 +333,7 @@ class ReportController extends Controller
                     ) AS total_payroll_value
                 "),
                 DB::raw("
-                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_overtime_hour_total) AS SIGNED), 0)
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_overtime_hour) AS SIGNED), 0)
                     FROM user_payrolls
                     LEFT JOIN users ON users.user_id = user_payrolls.user_payroll_user_id
                     WHERE users.user_company_id = company_id
@@ -540,7 +540,7 @@ class ReportController extends Controller
                     ) AS total_payroll_value
                 "),
                 DB::raw("
-                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_overtime_hour_total) AS SIGNED), 0)
+                    (SELECT COALESCE(CAST(SUM(user_payrolls.user_payroll_overtime_hour) AS SIGNED), 0)
                     FROM user_payrolls
                     WHERE user_payrolls.user_payroll_user_id = users.user_id
                     AND users.user_id = user_id
@@ -743,7 +743,7 @@ class ReportController extends Controller
             ->select(
                 DB::raw("DATE_FORMAT(CONCAT(user_payroll_year, '-', user_payroll_month, '-01'), '%M %Y') as payroll_period"),
                 DB::raw("COALESCE(CAST(SUM(user_payroll_value) AS SIGNED), 0) AS total_payroll_value"),
-                DB::raw("COALESCE(CAST(SUM(user_payroll_overtime_hour_total) AS SIGNED), 0) AS total_overtime_hours"),
+                DB::raw("COALESCE(CAST(SUM(user_payroll_overtime_hour) AS SIGNED), 0) AS total_overtime_hours"),
                 DB::raw("COALESCE(CAST(SUM(user_payroll_transport) AS SIGNED), 0) AS total_transport"),
                 DB::raw("COALESCE(CAST(SUM(user_payroll_communication) AS SIGNED), 0) AS total_communication"),
                 DB::raw("COALESCE(CAST(SUM(user_payroll_meal_allowance) AS SIGNED), 0) AS total_meal_allowance"),
@@ -770,6 +770,16 @@ class ReportController extends Controller
                 ->whereNull('user_payrolls.deleted_at');
             $total_all = $queryTotal->count();
 
+            $widget_total_income = 0;
+            $widget_total_deductions = 0;
+            $widget_total_accepted = 0;
+
+            foreach ($res as $key => $value) {
+                $widget_total_income += $value->total_payroll_value + $value->total_overtime_hours + $value->total_transport + $value->total_communication + $value->total_meal_allowance + $value->total_income;
+                $widget_total_deductions += $value->total_absenteeism_cut + $value->total_bpjs_kes + $value->total_bpjs_tk + $value->total_deductions;
+                $widget_total_accepted += $value->total_accepted;
+            }
+
             $user = User::query()
                 ->select(
                     'user_id',
@@ -789,6 +799,10 @@ class ReportController extends Controller
                 ->leftJoin('divisions', 'user_division_id', '=', 'division_id')
                 ->where('user_id', $user_id)
                 ->first();
+
+            $user['widget_total_income'] = $widget_total_income;
+            $user['widget_total_deductions'] = $widget_total_deductions;
+            $user['widget_total_accepted'] = $widget_total_accepted;
 
             $data = [
                 'current_page' => $res->currentPage(),
