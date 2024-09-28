@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 // use App\Models\MasterPayroll;
 use App\Models\UserPayroll;
 use Illuminate\Support\Facades\Validator;
-// use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use PDF;
 
 class UserPayrollController extends Controller
 {
@@ -228,5 +230,41 @@ class UserPayrollController extends Controller
         }
 
         return response()->json($output, 200);
+    }
+
+    public function slip_payroll($id)
+    {
+        $data = UserPayroll::query()
+            ->select(
+                'user_payrolls.*',
+                DB::raw("MONTHNAME(STR_TO_DATE(user_payroll_month, '%m')) as user_payroll_month_name"),
+                'user_name',
+                'user_code',
+                'user_position',
+                'company_name',
+            )
+            ->join('users', 'user_id', '=', 'user_payroll_user_id')
+            ->join('companies', 'company_id', '=', 'user_company_id')
+            ->where('user_payroll_id', $id)
+            ->first();
+
+        $data->formatted_sent_at = Carbon::parse($data->sent_at)->translatedFormat('d F Y');
+        $pdf = PDF::loadView('slip_payroll', ['result' => $data]);
+        $fileName = 'slip_gaji_'.$data['user_code'].'_'.$data['user_payroll_year'].'_'.$data['user_payroll_month'] . '.pdf';
+        $pdf->save(storage_path('app/public/payroll/' . $fileName));
+        $url = env('APP_URL'). '/storage/payroll/' . $fileName;
+
+        $output = [
+            'code'      => 200,
+            'status'    => 'success',
+            'message'   => 'Berhasil mendapatkan data',
+            'data'      => [
+                'name'  => $fileName,
+                'url' => $url
+            ]
+        ];
+
+        return response()->json($output, 200);
+        
     }
 }

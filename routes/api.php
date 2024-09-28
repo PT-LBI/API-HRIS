@@ -117,6 +117,7 @@ Route::middleware('auth:api')->group(function() {
         // Route::get('/monthly_payroll_detail/{id}', [UserPayrollController::class, 'monthly_payroll_detail']);
         Route::patch('/update/{id}', [UserPayrollController::class, 'update']);
         Route::patch('/send/{id}', [UserPayrollController::class, 'send']);
+        Route::get('/slip_payroll/{id}', [UserPayrollController::class, 'slip_payroll']);
         // Route::delete('/delete/{id}', [UserPayrollController::class, 'delete']);
     });
     
@@ -217,6 +218,7 @@ Route::middleware('auth:api')->group(function() {
     Route::group(['prefix' => 'mobile/payroll'], function () {
         Route::get('', [MyPayrollController::class, 'index']);
         Route::get('/detail/{id}', [MyPayrollController::class, 'detail']);
+        Route::get('/slip_payroll/{id}', [UserPayrollController::class, 'slip_payroll']);
     });
 
 });
