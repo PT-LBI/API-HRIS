@@ -51,6 +51,14 @@ class ReportController extends Controller
                 "),
                 DB::raw("
                     (SELECT COUNT(schedule_id) 
+                    FROM schedules 
+                    WHERE schedule_user_id = users.user_id 
+                    AND schedule_date LIKE '%$date%' 
+                    AND schedule_status = 'in' 
+                    AND deleted_at IS NULL) as total_schedule
+                "),
+                DB::raw("
+                    (SELECT COUNT(schedule_id) 
                         FROM schedules 
                         WHERE schedule_user_id = users.user_id 
                         AND schedule_date LIKE '%$date%' 
@@ -104,6 +112,12 @@ class ReportController extends Controller
             
             $query->orderBy($sort, $dir);
             $res = $query->paginate($limit, ['*'], 'page', $page);
+
+            foreach ($res as $key => $value) {
+                $total_percentage = $value->total_presence / $value->total_schedule * 100;
+                // $toal_percentage_new =  number_format((float)$total_percentage, 2, '.', '');
+                $res[$key]->total_percentage = $total_percentage;
+            }
 
             // get total data
             $queryTotal = User::query()
@@ -741,6 +755,7 @@ class ReportController extends Controller
             
             $query = UserPayroll::query()
             ->select(
+                'user_payroll_user_id',
                 DB::raw("DATE_FORMAT(CONCAT(user_payroll_year, '-', user_payroll_month, '-01'), '%M %Y') as payroll_period"),
                 DB::raw("COALESCE(CAST(SUM(user_payroll_value) AS SIGNED), 0) AS total_payroll_value"),
                 DB::raw("COALESCE(CAST(SUM(user_payroll_overtime_hour) AS SIGNED), 0) AS total_overtime_hours"),

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Superadmin;
 use Illuminate\Http\Request;
 use App\Models\Presence;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PresenceExport;
 
 class PresenceController extends Controller
 {
@@ -197,5 +199,24 @@ class PresenceController extends Controller
         ];
 
         return response()->json($output, 200);
+    }
+
+    public function export_excel()
+    {
+        $date = date('ymd');
+        $fileName = 'Presence-' . $date . '.xlsx';
+        Excel::store(new PresenceExport, $fileName, 'public');
+        $url = env('APP_URL'). '/storage/' . $fileName;
+
+        $output = [
+            'code'      => 200,
+            'status'    => 'success',
+            'message'   => 'Berhasil mendapatkan data',
+            'data'      => $url
+        ];
+
+        return response()->json($output, 200);
+
+        // return Excel::download(new PresenceExport, "tes-{$date}.xlsx");
     }
 }
