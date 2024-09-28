@@ -755,7 +755,7 @@ class ReportController extends Controller
             
             $query = UserPayroll::query()
             ->select(
-                'user_payroll_user_id',
+                // 'user_payroll_user_id',
                 DB::raw("DATE_FORMAT(CONCAT(user_payroll_year, '-', user_payroll_month, '-01'), '%M %Y') as payroll_period"),
                 DB::raw("COALESCE(CAST(SUM(user_payroll_value) AS SIGNED), 0) AS total_payroll_value"),
                 DB::raw("COALESCE(CAST(SUM(user_payroll_overtime_hour) AS SIGNED), 0) AS total_overtime_hours"),
