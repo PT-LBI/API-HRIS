@@ -258,7 +258,7 @@ class UserPayrollController extends Controller
             'code'      => 200,
             'status'    => 'success',
             'message'   => 'Berhasil mendapatkan data',
-            'data'      => [
+            'result'    => [
                 'name'  => $fileName,
                 'url' => $url
             ]
