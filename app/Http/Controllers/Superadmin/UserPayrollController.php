@@ -251,8 +251,8 @@ class UserPayrollController extends Controller
         $data->formatted_sent_at = Carbon::parse($data->sent_at)->translatedFormat('d F Y');
         $pdf = PDF::loadView('slip_payroll', ['result' => $data]);
         $fileName = 'slip_gaji_'.$data['user_code'].'_'.$data['user_payroll_year'].'_'.$data['user_payroll_month'] . '.pdf';
-        $pdf->save(storage_path('app/public/payroll/' . $fileName));
-        $url = env('APP_URL'). '/storage/payroll/' . $fileName;
+        $pdf->save(storage_path('app/public/' . $fileName));
+        $url = env('APP_URL'). '/storage/' . $fileName;
 
         $output = [
             'code'      => 200,
