@@ -8,6 +8,8 @@ use App\Models\UserPayroll;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PayrollExport;
 
 class MasterPayrollController extends Controller
 {
@@ -459,5 +461,22 @@ class MasterPayrollController extends Controller
 
         return response()->json($output, 200);
 
+    }
+
+    public function export_excel()
+    {
+        $date = date('ymdhm');
+        $fileName = 'Payroll-' . $date . '.xlsx';
+        Excel::store(new PayrollExport, $fileName, 'public');
+        $url = env('APP_URL'). '/storage/' . $fileName;
+
+        $output = [
+            'code'      => 200,
+            'status'    => 'success',
+            'message'   => 'Berhasil mendapatkan data',
+            'result'    => $url
+        ];
+
+        return response()->json($output, 200);
     }
 }

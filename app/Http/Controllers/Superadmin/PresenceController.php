@@ -203,7 +203,7 @@ class PresenceController extends Controller
 
     public function export_excel()
     {
-        $date = date('ymd');
+        $date = date('ymdhm');
         $fileName = 'Presence-' . $date . '.xlsx';
         Excel::store(new PresenceExport, $fileName, 'public');
         $url = env('APP_URL'). '/storage/' . $fileName;
@@ -212,11 +212,9 @@ class PresenceController extends Controller
             'code'      => 200,
             'status'    => 'success',
             'message'   => 'Berhasil mendapatkan data',
-            'data'      => $url
+            'result'    => $url
         ];
 
         return response()->json($output, 200);
-
-        // return Excel::download(new PresenceExport, "tes-{$date}.xlsx");
     }
 }

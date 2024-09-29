@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use PDF;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\EmployeeExport;
 
 class EmployeeController extends Controller
 {
@@ -51,8 +52,6 @@ class EmployeeController extends Controller
                     'user_bank_name',
                     'user_account_name',
                     'user_account_number',
-                    'user_place_birth',
-                    'user_place_birth',
                     'user_company_id',
                     'company_name',
                     'user_division_id',
@@ -506,22 +505,22 @@ class EmployeeController extends Controller
 
     }
 
-    // public function export_excel()
-    // {
-    //     $date = date('ymd');
-    //     $fileName = 'Employee-' . $date . '.xlsx';
-    //     Excel::store(new EmployeeExport, $fileName, 'public');
-    //     $url = env('APP_URL'). '/storage/' . $fileName;
+    public function export_excel()
+    {
+        $date = date('ymd');
+        $fileName = 'Employee-' . $date . '.xlsx';
+        Excel::store(new EmployeeExport, $fileName, 'public');
+        $url = env('APP_URL'). '/storage/' . $fileName;
 
-    //     $output = [
-    //         'code'      => 200,
-    //         'status'    => 'success',
-    //         'message'   => 'Berhasil mendapatkan data',
-    //         'result'     => $url
-    //     ];
+        $output = [
+            'code'      => 200,
+            'status'    => 'success',
+            'message'   => 'Berhasil mendapatkan data',
+            'result'     => $url
+        ];
 
-    //     return response()->json($output, 200);
-    // }
+        return response()->json($output, 200);
+    }
 
     // public function export_pdf()
     // {

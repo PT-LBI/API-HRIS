@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\SendNotif;
 use Illuminate\Support\Facades\Notification;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\LeaveExport;
 
 
 class LeaveController extends Controller
@@ -194,7 +196,7 @@ class LeaveController extends Controller
             }
 
             // Kirim notifikasi
-            $send = sendNotification();
+            // $send = sendNotification();
 
             // $message = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
 
@@ -282,6 +284,23 @@ class LeaveController extends Controller
         }
 
         return true;
+    }
+
+    public function export_excel()
+    {
+        $date = date('ymdhm');
+        $fileName = 'Leave-' . $date . '.xlsx';
+        Excel::store(new LeaveExport, $fileName, 'public');
+        $url = env('APP_URL'). '/storage/' . $fileName;
+
+        $output = [
+            'code'      => 200,
+            'status'    => 'success',
+            'message'   => 'Berhasil mendapatkan data',
+            'result'    => $url
+        ];
+
+        return response()->json($output, 200);
     }
 
 }

@@ -73,7 +73,7 @@ Route::middleware('auth:api')->group(function() {
         Route::get('/detail/{id}', [EmployeeController::class, 'detail']);
         Route::post('/update/{id}', [EmployeeController::class, 'update']);
         Route::delete('/delete/{id}', [EmployeeController::class, 'delete']);
-        // Route::get('/export_excel', [EmployeeController::class, 'export_excel']);
+        Route::get('/export_excel', [EmployeeController::class, 'export_excel']);
         // Route::get('/export_pdf', [EmployeeController::class, 'export_pdf']);
     });
 
@@ -108,6 +108,7 @@ Route::middleware('auth:api')->group(function() {
         Route::get('/monthly_payroll', [MasterPayrollController::class, 'monthly_payroll']);
         Route::patch('/update/{id}', [MasterPayrollController::class, 'update']);
         Route::delete('/delete/{id}', [MasterPayrollController::class, 'delete']);
+        Route::get('/export_excel', [MasterPayrollController::class, 'export_excel']);
     });
     
     Route::group(['prefix' => 'user_payroll'], function () {
@@ -136,17 +137,20 @@ Route::middleware('auth:api')->group(function() {
         Route::get('/detail/{id}', [ScheduleController::class, 'detail']);
         Route::patch('/update/{id}', [ScheduleController::class, 'update']);
         Route::delete('/delete/{id}', [ScheduleController::class, 'delete']);
+        Route::get('/export_excel', [ScheduleController::class, 'export_excel']);
     });
 
     Route::group(['prefix' => 'leave'], function () {
         Route::get('', [LeaveController::class, 'index']);
         Route::get('/detail/{id}', [LeaveController::class, 'detail']);
         Route::patch('/update/{id}', [LeaveController::class, 'update']);
+        Route::get('/export_excel', [LeaveController::class, 'export_excel']);
     });
     
     Route::group(['prefix' => 'presence'], function () {
         Route::get('', [PresenceController::class, 'index']);
         Route::get('/detail/{id}', [PresenceController::class, 'detail']);
+        Route::get('/export_excel', [PresenceController::class, 'export_excel']);
     });
 
     Route::group(['prefix' => 'master_location'], function () {
