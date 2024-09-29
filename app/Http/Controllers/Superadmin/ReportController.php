@@ -7,6 +7,13 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Company;
 use App\Models\UserPayroll;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ReportPresenceExport;
+use App\Exports\ReportPresenceUserExport;
+use App\Exports\ReportPayrollExport;
+use App\Exports\ReportPayrollCompanyExport;
+use App\Exports\ReportPayrollUserExport;
+
 use Carbon\Carbon;
 
 class ReportController extends Controller
@@ -842,6 +849,91 @@ class ReportController extends Controller
             $output['message'] = $output['message'];
             // $output['message'] = $e->getMessage();
         }
+
+        return response()->json($output, 200);
+    }
+
+    public function export_presence()
+    {
+        $date = date('ymdhm');
+        $fileName = 'Report-Presence-' . $date . '.xlsx';
+        Excel::store(new ReportPresenceExport, $fileName, 'public');
+        $url = env('APP_URL'). '/storage/' . $fileName;
+
+        $output = [
+            'code'      => 200,
+            'status'    => 'success',
+            'message'   => 'Berhasil mendapatkan data',
+            'result'    => $url
+        ];
+
+        return response()->json($output, 200);
+    }
+
+    public function export_presence_user()
+    {
+        $date = date('ymdhm');
+        $fileName = 'Report-Presence-User' . $date . '.xlsx';
+        Excel::store(new ReportPresenceUserExport, $fileName, 'public');
+        $url = env('APP_URL'). '/storage/' . $fileName;
+
+        $output = [
+            'code'      => 200,
+            'status'    => 'success',
+            'message'   => 'Berhasil mendapatkan data',
+            'result'    => $url
+        ];
+
+        return response()->json($output, 200);
+    }
+    
+    public function export_payroll()
+    {
+        $date = date('ymdhm');
+        $fileName = 'Report-Payroll-' . $date . '.xlsx';
+        Excel::store(new ReportPayrollExport, $fileName, 'public');
+        $url = env('APP_URL'). '/storage/' . $fileName;
+
+        $output = [
+            'code'      => 200,
+            'status'    => 'success',
+            'message'   => 'Berhasil mendapatkan data',
+            'result'    => $url
+        ];
+
+        return response()->json($output, 200);
+    }
+    
+    public function export_payroll_company()
+    {
+        $date = date('ymdhm');
+        $fileName = 'Report-Payroll-Company' . $date . '.xlsx';
+        Excel::store(new ReportPayrollCompanyExport, $fileName, 'public');
+        $url = env('APP_URL'). '/storage/' . $fileName;
+
+        $output = [
+            'code'      => 200,
+            'status'    => 'success',
+            'message'   => 'Berhasil mendapatkan data',
+            'result'    => $url
+        ];
+
+        return response()->json($output, 200);
+    }
+
+    public function export_payroll_user()
+    {
+        $date = date('ymdhm');
+        $fileName = 'Report-Payroll-User-' . $date . '.xlsx';
+        Excel::store(new ReportPayrollUserExport, $fileName, 'public');
+        $url = env('APP_URL'). '/storage/' . $fileName;
+
+        $output = [
+            'code'      => 200,
+            'status'    => 'success',
+            'message'   => 'Berhasil mendapatkan data',
+            'result'    => $url
+        ];
 
         return response()->json($output, 200);
     }

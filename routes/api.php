@@ -179,6 +179,11 @@ Route::middleware('auth:api')->group(function() {
         Route::get('/payroll', [ReportController::class, 'payroll']);
         Route::get('/payroll_company', [ReportController::class, 'payroll_company']);
         Route::get('/payroll_user', [ReportController::class, 'payroll_user']);
+        Route::get('/presence/export_excel', [ReportController::class, 'export_presence']);
+        Route::get('/presence_user/export_excel', [ReportController::class, 'export_presence_user']);
+        Route::get('/payroll/export_excel', [ReportController::class, 'export_payroll']);
+        Route::get('/payroll_company/export_excel', [ReportController::class, 'export_payroll_company']);
+        Route::get('/payroll_user/export_excel', [ReportController::class, 'export_payroll_user']);
     });
 
 

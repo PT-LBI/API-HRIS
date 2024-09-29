@@ -17,7 +17,7 @@ class PayrollExport implements FromCollection, WithHeadings,  WithColumnWidths, 
     public function collection()
     {
         $sort = request()->query('sort') ?? 'payroll_id';
-        $dir = request()->query('dir') ?? 'DESC';
+        $dir = request()->query('dir') ?? 'ASC';
         $search = request()->query('search');
         $status = request()->query('status');
         $company_id = request()->query('company_id');
