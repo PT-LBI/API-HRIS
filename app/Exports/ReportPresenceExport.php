@@ -105,8 +105,13 @@ class ReportPresenceExport implements FromCollection, WithHeadings, WithColumnWi
 
         $data = $query->get();
         foreach ($data as $key => $value) {
-            $total_percentage = $value->total_presence / $value->total_schedule * 100;
-            // $toal_percentage_new =  number_format((float)$total_percentage, 2, '.', '');
+            $total_percentage = 0;
+            if ($value->total_presence == 0){
+                $total_percentage = 0;
+            } else {
+                $total_percentage = $value->total_presence / $value->total_schedule * 100;
+            }
+            // $total_percentage_new =  number_format((float)$total_percentage, 2, '.', '');
             $data[$key]->total_percentage = $total_percentage;
         }
         
