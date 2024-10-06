@@ -33,6 +33,20 @@ class UserPayrollController extends Controller
             ], 422);
         }
 
+        $check_data = UserPayroll::where('user_payroll_user_id', request('user_payroll_user_id'))
+            ->where('user_payroll_month', request('user_payroll_month'))
+            ->where('user_payroll_year', request('user_payroll_year'))
+            ->first();
+
+        if ($check_data) {
+            return response()->json([
+                'code' => 422,
+                'status' => 'error',
+                'message' => 'Data sudah ada',
+                'result' => []
+            ], 422);
+        }
+
         $data = UserPayroll::create([
             'user_payroll_month' => request('user_payroll_month'),
             'user_payroll_year' => request('user_payroll_year'),
