@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Mobile;
 
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class MyProfileController extends Controller
 {
@@ -54,6 +57,59 @@ class MyProfileController extends Controller
                 'status' => 'error',
                 'message' => 'Data tidak ditemukan',
                 'result' => new \stdClass(),
+            ];
+        }
+
+        return response()->json($output, 200);
+    }
+
+    public function update_fcm_token(Request $request)
+    {
+        $id = auth()->user()->user_id;
+        $check_data = User::find($id);
+
+        if (!$check_data) {
+            return response()->json([
+                'code' => 404,
+                'status' => 'error',
+                'message' => 'Data tidak ditemukan',
+                'result' => [],
+            ], 404);
+        }
+
+        $rules = [
+            'user_fcm_token' => 'required',
+        ];
+
+        // Validate the request
+        $validator = Validator::make($request->all(), $rules);
+
+        //check if validation fails
+        if ($validator->fails()) {
+            return response()->json([
+                'code' => 422,
+                'status' => 'error',
+                'message' => $validator->messages()
+            ], 422);
+        }
+
+        $res = $check_data->update([
+            'user_fcm_token'    => $request->user_fcm_token,
+        ]);
+
+        if ($res) {
+            $output = [
+                'code'      => 200,
+                'status'    => 'success',
+                'message'   => 'Berhasil mengubah data',
+                'result'     => convertResponseSingle($check_data)
+            ];
+        } else {
+            $output = [
+                'code'      => 500,
+                'status'    => 'error',
+                'message'   => 'Gagal mengubah data',
+                'result'     => []
             ];
         }
 

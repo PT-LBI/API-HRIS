@@ -159,6 +159,7 @@ class LeaveController extends Controller
 
     public function update(Request $request, $id)
     {
+
         $check_data = Leave::find($id);
         
         if (!$check_data) {
@@ -196,9 +197,9 @@ class LeaveController extends Controller
             }
 
             // Kirim notifikasi
-            // $send = sendNotification();
+            $send = sendNotification();
 
-            // $message = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
+            $message = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
 
             // $get_user = User::find($check_data->leave_user_id);
             // // Kirim notifikasi
@@ -208,27 +209,31 @@ class LeaveController extends Controller
 
 
             // if($is_send) {
-            //     $dataNotif = [
-            //         'type' => 'leave',
-            //         'icon' => '',
-            //         'title' => 'Cuti anda telah di ' . $request->leave_status,
-            //         'body' => $message,
-            //         'sound' => 'default',
-            //         'data' => [
-            //             'id' => $id,
-            //             'code' => '',
-            //             'title' => 'Cuti anda telah di ' . $request->leave_status,
-            //             'msg' => $message,
-            //             'image_url' => '',
-            //         ],
-            //     ];
+                $dataNotif = [
+                    'type' => 'leave',
+                    'icon' => '',
+                    'title' => 'Cuti anda telah di ' . $request->leave_status,
+                    'body' => $message,
+                    'sound' => 'default',
+                    'data' => [
+                        'id' => $id,
+                        'code' => '',
+                        'title' => 'Cuti anda telah di ' . $request->leave_status,
+                        'msg' => $message,
+                        'image_url' => '',
+                    ],
+                ];
 
-            //     LogNotif::create([
-            //         'log_notif_user_id' => $check_data->leave_user_id,
-            //         'log_notif_data_json' => $dataNotif,
-            //         'log_notif_is_read' => 0,
-            //         'created_at' => now()->addHours(7),
-            //     ]);
+                // Mengonversi array menjadi JSON string
+                $logNotifJson = json_encode($dataNotif);
+
+
+                LogNotif::create([
+                    'log_notif_user_id' => $check_data->leave_user_id,
+                    'log_notif_data_json' => $logNotifJson,
+                    'log_notif_is_read' => 0,
+                    'created_at' => now()->addHours(7),
+                ]);
             // }
 
             DB::commit();
