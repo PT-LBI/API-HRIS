@@ -88,7 +88,10 @@ class UserPayrollController extends Controller
         $data = UserPayroll::query()
             ->select(
                 'user_payrolls.*',
+                DB::raw('TIMESTAMPDIFF(YEAR, user_join_date, CURDATE()) as years_since_join'),
+                DB::raw('DATEDIFF(CURDATE(), DATE_ADD(user_join_date, INTERVAL TIMESTAMPDIFF(YEAR, user_join_date, CURDATE()) YEAR)) as days_since_join'),
             )
+            ->leftjoin('users', 'user_id', '=', 'user_payroll_user_id')
             ->where('user_payroll_id', $id)
             ->first();
 
