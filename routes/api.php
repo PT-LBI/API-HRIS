@@ -192,6 +192,7 @@ Route::middleware('auth:api')->group(function() {
     Route::group(['prefix' => 'mobile/profile'], function () {
         Route::get('', [MyProfileController::class, 'index']);
         Route::patch('/update/{id}', [MyProfileController::class, 'update']);
+        Route::patch('/update_fcm_token', [MyProfileController::class, 'update_fcm_token']);
     });
 
     Route::group(['prefix' => 'mobile/announcement'], function () {
