@@ -274,6 +274,8 @@ class MasterPayrollController extends Controller
                 'data' => convertResponseArray($res->items()),
             ];
 
+            $check_schedule_payroll = $this->check_schedule_payroll();
+
             $output = [
                 'code' => 200,
                 'status' => 'success',
@@ -478,5 +480,46 @@ class MasterPayrollController extends Controller
         ];
 
         return response()->json($output, 200);
+    }
+
+    public function check_schedule_payroll()
+    {
+        $month = date('m');
+        $year = date('Y');
+
+        $get_payroll = UserPayroll::query()
+            ->select('user_payroll_id')
+            ->where('user_payroll_month', $month)
+            ->where('user_payroll_year', $year)
+            ->whereNull('deleted_at')
+            ->first();
+
+        if (empty($get_payroll)) {
+            $get_master_payroll = MasterPayroll::query()
+                ->select('payroll_id', 'payroll_user_id', 'payroll_value', 'payroll_overtime_hour')
+                ->whereNull('deleted_at')
+                ->get();
+
+            if (!empty($get_master_payroll)) {
+                $payroll = [];
+                foreach ($get_master_payroll as $master) {
+                    $payroll[] = [
+                        'user_payroll_month' => $month,
+                        'user_payroll_year' => $year,
+                        'user_payroll_user_id' => $master->payroll_user_id,
+                        'user_payroll_payroll_id' => $master->payroll_id,
+                        'user_payroll_value' => $master->payroll_value,
+                        'user_payroll_overtime_hour' => $master->payroll_overtime_hour,
+                        'user_payroll_status' => 'waiting',
+                        'created_at' => now()->addHours(7),
+                        'updated_at' => null,
+                    ];
+                }
+
+                if (!empty($payroll)) {
+                    UserPayroll::insert($payroll);
+                }
+            }
+        }
     }
 }
