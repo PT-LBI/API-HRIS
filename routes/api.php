@@ -40,6 +40,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('login/mobile', [AuthController::class, 'login_mobile']);
     Route::post('logout', [AuthController::class, 'logout']);
+    Route::patch('/update_fcm_token', [AuthController::class, 'update_fcm_token']);
 });
 
 Route::get('/test', function () {
@@ -192,7 +193,7 @@ Route::middleware('auth:api')->group(function() {
     Route::group(['prefix' => 'mobile/profile'], function () {
         Route::get('', [MyProfileController::class, 'index']);
         Route::patch('/update/{id}', [MyProfileController::class, 'update']);
-        Route::patch('/update_fcm_token', [MyProfileController::class, 'update_fcm_token']);
+        // Route::patch('/update_fcm_token', [MyProfileController::class, 'update_fcm_token']);
     });
 
     Route::group(['prefix' => 'mobile/announcement'], function () {
