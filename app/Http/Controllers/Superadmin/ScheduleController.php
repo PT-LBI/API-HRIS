@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ScheduleExport;
 
 class ScheduleController extends Controller
 {
@@ -59,6 +61,7 @@ class ScheduleController extends Controller
         $query = User::where('user_status', 'active')
             ->leftjoin('divisions', 'division_id', '=', 'user_division_id')
             ->leftjoin('companies', 'company_id', '=', 'user_company_id')
+            ->where('user_role', '!=', 'superadmin')
             ->whereNull('users.deleted_at');
 
         if ($division_id) {
@@ -430,5 +433,22 @@ class ScheduleController extends Controller
         if ($check_schedule) {
             return false;
         }
+    }
+
+    public function export_excel()
+    {
+        $date = date('ymdhm');
+        $fileName = 'Leave-' . $date . '.xlsx';
+        Excel::store(new ScheduleExport, $fileName, 'public');
+        $url = env('APP_URL'). '/storage/' . $fileName;
+
+        $output = [
+            'code'      => 200,
+            'status'    => 'success',
+            'message'   => 'Berhasil mendapatkan data',
+            'result'    => $url
+        ];
+
+        return response()->json($output, 200);
     }
 }
