@@ -93,8 +93,13 @@ class EmployeeController extends Controller
                 $query->where('user_division_id', $division_id);
             }
 
-            if ($company_id && $company_id !== null) {
-                $query->where('user_company_id', $company_id);
+            // role manager and admin only can see their company data
+            if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+                $query->where('company_id', auth()->user()->user_company_id);
+            } else {
+                if ($company_id && $company_id !== null) {
+                    $query->where('company_id', $company_id);
+                }
             }
 
             if ($user_role && $user_role !== null) {
@@ -112,6 +117,16 @@ class EmployeeController extends Controller
                 ->leftJoin('master_locations', 'user_location_id', '=', 'location_id')
                 ->where('user_role', '!=', 'superadmin')
                 ->where('users.deleted_at', null);
+
+            // role manager and admin only can see their company data
+            if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+                $queryTotal->where('company_id', auth()->user()->user_company_id);
+            } else {
+                if ($company_id && $company_id !== null) {
+                    $queryTotal->where('company_id', $company_id);
+                }
+            }
+
             $total_all = $queryTotal->count();
 
             $response = [
