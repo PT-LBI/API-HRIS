@@ -92,8 +92,12 @@ class PresenceController extends Controller
                 $query->where('schedule_date', $date);
             }
             
-            if ($company_id && $company_id !== null) {
-                $query->where('company_id', $company_id);
+            if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+                $query->where('company_id', auth()->user()->user_company_id);
+            } else {
+                if ($company_id && $company_id !== null) {
+                    $query->where('company_id', $company_id);
+                }
             }
 
             $query->orderBy($sort, $dir);
@@ -107,6 +111,26 @@ class PresenceController extends Controller
                 ->leftjoin('schedules', 'schedule_id', '=', 'presence_schedule_id')
                 ->leftjoin('shifts', 'shift_id', '=', 'schedule_shift_id')
                 ->whereNull('presence.deleted_at');
+
+            if ($date && $date !== null) {
+                $queryTotal->where('schedule_date', $date);
+            }
+
+            if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+                $queryTotal->where('company_id', auth()->user()->user_company_id);
+            }
+
+            // Status condition
+            if ($status && $status !== null) {
+                $queryTotal->where(function ($queryTotal) use ($status) {
+                    if ($status == 'regular') {
+                        $queryTotal->whereIn('presence.presence_status', ['in', 'out']);
+                    } elseif ($status == 'overtime') {
+                        $queryTotal->whereIn('presence.presence_status', ['ovt_in', 'ovt_out']);
+                    }
+                });
+            }
+            
             $total_all = $queryTotal->count();
 
             $data = [

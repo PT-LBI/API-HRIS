@@ -68,15 +68,19 @@ class LeaveController extends Controller
                 $query->where('leave_status', $status);
             }
             
-            if ($company_id && $company_id !== null) {
-                $query->where('company_id', $company_id);
-            }
-
             if ($start_date && $start_date !== null) {
                 if ($end_date && $end_date !== null) {
                     $query->whereBetween('leave_start_date', [$start_date, $end_date]);
                 } else{
                     $query->where('leave_start_date', $start_date);
+                }
+            }
+
+            if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+                $query->where('company_id', auth()->user()->user_company_id);
+            } else {
+                if ($company_id && $company_id !== null) {
+                    $query->where('company_id', $company_id);
                 }
             }
             
@@ -89,6 +93,15 @@ class LeaveController extends Controller
                 ->where('leave.deleted_at', null)
                 ->leftjoin('users', 'leave_user_id', '=', 'user_id')
                 ->leftjoin('companies', 'user_company_id', '=', 'company_id');
+                
+            if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+                $queryTotal->where('company_id', auth()->user()->user_company_id);
+            } else {
+                if ($company_id && $company_id !== null) {
+                    $queryTotal->where('company_id', $company_id);
+                }
+            }
+            
             $total_all = $queryTotal->count();
 
             $data = [

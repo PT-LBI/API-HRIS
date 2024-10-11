@@ -47,8 +47,13 @@ class MasterLocationController extends Controller
                 });
             }
 
-            if ($company_id && $company_id !== null) {
-                $query->where('location_company_id', $company_id);
+            // role manager and admin only can see their company data
+            if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+                $query->where('location_company_id', auth()->user()->user_company_id);
+            } else {
+                if ($company_id && $company_id !== null) {
+                    $query->where('location_company_id', $company_id);
+                }
             }
 
             $query->orderBy($sort, $dir);
@@ -59,6 +64,16 @@ class MasterLocationController extends Controller
                 ->select('1 as total')
                 ->leftJoin('companies', 'company_id', '=', 'location_company_id')
                 ->where('master_locations.deleted_at', null);
+
+            // role manager and admin only can see their company data
+            if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+                $queryTotal->where('location_company_id', auth()->user()->user_company_id);
+            } else {
+                if ($company_id && $company_id !== null) {
+                    $queryTotal->where('location_company_id', $company_id);
+                }
+            }
+            
             $total_all = $queryTotal->count();
 
             $data = [

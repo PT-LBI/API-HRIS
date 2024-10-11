@@ -68,8 +68,12 @@ class ScheduleController extends Controller
             $query->where('division_id', $division_id);
         }
 
-        if ($company_id) {
-            $query->where('company_id', $company_id);
+        if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+            $query->where('company_id', auth()->user()->user_company_id);
+        } else {
+            if ($company_id && $company_id !== null) {
+                $query->where('company_id', $company_id);
+            }
         }
 
         return $query->orderBy($sort, $dir);

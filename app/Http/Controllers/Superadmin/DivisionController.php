@@ -42,8 +42,13 @@ class DivisionController extends Controller
                 $query->where('division_status', $status);
             }
 
-            if ($company_id && $company_id !== null) {
-                $query->where('division_company_id', $company_id);
+           // role manager and admin only can see their company data
+           if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+                $query->where('company_id', auth()->user()->user_company_id);
+            } else {
+                if ($company_id && $company_id !== null) {
+                    $query->where('company_id', $company_id);
+                }
             }
 
             $query->orderBy($sort, $dir);
@@ -54,6 +59,16 @@ class DivisionController extends Controller
                 ->select('1 as total')
                 ->leftjoin('companies', 'division_company_id', '=', 'company_id')
                 ->where('divisions.deleted_at', null);
+
+            // role manager and admin only can see their company data
+            if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+                $queryTotal->where('company_id', auth()->user()->user_company_id);
+            } else {
+                if ($company_id && $company_id !== null) {
+                    $queryTotal->where('company_id', $company_id);
+                }
+            }
+
             $total_all = $queryTotal->count();
 
             $response = [

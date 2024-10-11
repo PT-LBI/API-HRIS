@@ -75,8 +75,13 @@ class MasterPayrollController extends Controller
                 $query->where('payroll_status', $status);
             }
             
-            if ($company_id && $company_id !== null) {
-                $query->where('user_company_id', $company_id);
+            // role manager and admin only can see their company data
+            if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+                $query->where('company_id', auth()->user()->user_company_id);
+            } else {
+                if ($company_id && $company_id !== null) {
+                    $query->where('company_id', $company_id);
+                }
             }
 
             if ($division_id && $division_id !== null) {
@@ -93,6 +98,16 @@ class MasterPayrollController extends Controller
                 ->leftJoin('users', 'master_payrolls.payroll_user_id', '=', 'users.user_id')
                 ->leftJoin('companies', 'users.user_company_id', '=', 'companies.company_id')
                 ->leftJoin('divisions', 'users.user_division_id', '=', 'divisions.division_id');
+
+            // role manager and admin only can see their company data
+            if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
+                $queryTotal->where('company_id', auth()->user()->user_company_id);
+            } else {
+                if ($company_id && $company_id !== null) {
+                    $queryTotal->where('company_id', $company_id);
+                }
+            }
+
             $total_all = $queryTotal->count();
 
             $data = [
