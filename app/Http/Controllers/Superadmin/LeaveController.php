@@ -210,9 +210,14 @@ class LeaveController extends Controller
             }
 
             // Kirim notifikasi
-            $send = sendNotification();
+            // $token = 'fO3BOQCpSYaij9eUOQShtB:APA91bFEvScHJa8hvKck6OTW2t89fK0s4viaBo4FmvGNAU4tQ7a86xu0yo-wPscJlG-JG2WS4fzhQx_VCtRIQjHiL7tsX4JXUuup0PkIrcaFBDzYJYqABWM';
+            $token = 'd5ZaHgeRSAGR3MhnfA1JU7:APA91bHCf-LsNnUqHWT_iA-gX5sziLm5Fk77TSidXdvC4iG69izc8ufAIbNEThg7uuX9PzKNGN8Y_ecgxxo1rT48w770at_JcURLu8iyNxXIY92IwZySbbfCCXA991pHcDPhzNHNqM-6';
+            $title = 'Cuti';
+            $body = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
 
-            $message = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
+            $notif = sendFirebaseNotification($token, $title, $body);
+            
+            // $message = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
 
             // $get_user = User::find($check_data->leave_user_id);
             // // Kirim notifikasi
@@ -226,18 +231,18 @@ class LeaveController extends Controller
                     'type' => 'leave',
                     'icon' => '',
                     'title' => 'Cuti anda telah di ' . $request->leave_status,
-                    'body' => $message,
+                    'body' => $body,
                     'sound' => 'default',
                     'data' => [
                         'id' => $id,
                         'code' => '',
                         'title' => 'Cuti anda telah di ' . $request->leave_status,
-                        'msg' => $message,
+                        'msg' => $body,
                         'image_url' => '',
                     ],
                 ];
 
-                // Mengonversi array menjadi JSON string
+                // // Mengonversi array menjadi JSON string
                 $logNotifJson = json_encode($dataNotif);
 
 

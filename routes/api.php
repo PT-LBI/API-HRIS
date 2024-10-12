@@ -220,6 +220,7 @@ Route::middleware('auth:api')->group(function() {
 
     Route::group(['prefix' => 'mobile/notif'], function () {
         Route::get('', [MyNotifController::class, 'index']);
+        Route::patch('/read/{id}', [MyNotifController::class, 'read']);
     });
    
     Route::group(['prefix' => 'mobile/dashboard'], function () {

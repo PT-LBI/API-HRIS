@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Superadmin;
 
 use Illuminate\Http\Request;
 use App\Models\Announcement;
+use App\Models\LogNotif;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
 class AnnouncementController extends Controller
@@ -105,6 +107,50 @@ class AnnouncementController extends Controller
         ]);
 
         if ($data) {
+            $title = 'Pengumuman';
+            $dataNotif = [
+                'type' => 'news',
+                'icon' => '',
+                'title' => $title ,
+                'body' => request('announcement_title'),
+                'sound' => 'default',
+                'data' => [
+                    'id' => $data->announcement_id,
+                    'code' => '',
+                    'title' => $title ,
+                    'msg' => request('announcement_title'),
+                    'image_url' => '',
+                ],
+            ];
+
+            //Mengonversi array menjadi JSON string
+            $logNotifJson = json_encode($dataNotif);
+
+            //Mengirim notifikasi ke semua user
+            $getUsers = User::query()
+                ->select(['user_id', 'user_fcm_token'])
+                ->where('user_role', '!=', 'superadmin')
+                ->where('deleted_at', null)
+                ->get();
+
+            $logNotifData = [];
+
+            if (count($getUsers) > 0) {
+                foreach ($getUsers as $user) {
+                    $logNotifData[] = [
+                        'log_notif_user_id' => $user->user_id,
+                        'log_notif_data_json' => $logNotifJson,
+                        'log_notif_is_read' => 0,
+                        'created_at' => now()->addHours(7),
+                    ];
+
+                    sendFirebaseNotification($user->user_fcm_token, $title , request('announcement_title'));
+                }
+                
+                // Insert batch notifikasi ke database
+                LogNotif::insert($logNotifData);
+            }
+
             $output = [
                 'code'      => 200,
                 'status'    => 'success',

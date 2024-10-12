@@ -8,6 +8,7 @@ use App\Models\UserPayroll;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\LogNotif;
 use PDF;
 
 class UserPayrollController extends Controller
@@ -231,6 +232,37 @@ class UserPayrollController extends Controller
         ]);
 
         if ($res) {
+            $monthName = Carbon::createFromFormat('m', $check_data->user_payroll_month)->translatedFormat('F');
+            $title = 'Pengiriman Gaji Berhasil';
+            $msg = 'Selamat, gajian bulan ' . $monthName . ' ' . $check_data->user_payroll_year . ' telah dikirim';
+            
+            $dataNotif = [
+                'type' => 'payroll',
+                'icon' => '',
+                'title' => $title,
+                'body' => $msg,
+                'sound' => 'default',
+                'data' => [
+                    'id' => $id,
+                    'code' => '',
+                    'title' => $title,
+                    'msg' => $msg,
+                    'image_url' => '',
+                ],
+            ];
+
+            //Mengonversi array menjadi JSON string
+            $logNotifJson = json_encode($dataNotif);
+
+            sendFirebaseNotification($check_data->user_fcm_token, $title, $msg);
+
+            LogNotif::create([
+                'log_notif_user_id' => $id,
+                'log_notif_data_json' => $logNotifJson,
+                'log_notif_is_read' => 0,
+                'created_at' => now()->addHours(7),
+            ]);
+
             $output = [
                 'code'      => 200,
                 'status'    => 'success',

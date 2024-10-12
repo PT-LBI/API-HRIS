@@ -32,7 +32,7 @@ class MyNotifController extends Controller
                 )
                 ->where('log_notif_user_id', auth()->user()->user_id);
             
-            if ($is_read && $is_read !== null) {
+            if (isset($is_read)) {
                 $query->where('log_notif_is_read', $is_read);
             }
 
@@ -48,6 +48,11 @@ class MyNotifController extends Controller
             $queryTotal = LogNotif::query()
                 ->select('1 as total')
                 ->where('log_notif_user_id', auth()->user()->user_id);
+
+            if (isset($is_read)) {
+                $queryTotal->where('log_notif_is_read', $is_read);
+            }
+
             $total_all = $queryTotal->count();
 
             $data = [
@@ -71,6 +76,43 @@ class MyNotifController extends Controller
             $output['code'] = 500;
             $output['message'] = $output['message'];
             // $output['message'] = $e->getMessage();
+        }
+
+        return response()->json($output, 200);
+    }
+
+    public function read($id)
+    {
+        $check_data = LogNotif::find($id);
+
+        if (!$check_data) {
+            return response()->json([
+                'code' => 404,
+                'status' => 'error',
+                'message' => 'Data tidak ditemukan',
+                'result' => [],
+            ], 404);
+        }
+
+        $res = $check_data->update([
+            'log_notif_is_read' => 1,
+            'updated_at'        => now()->addHours(7),
+        ]);
+
+        if ($res) {
+            $output = [
+                'code'      => 200,
+                'status'    => 'success',
+                'message'   => 'Berhasil mengubah data',
+                'result'    => $check_data
+            ];
+        } else {
+            $output = [
+                'code'      => 500,
+                'status'    => 'error',
+                'message'   => 'Gagal mengubah data',
+                'result'    => []
+            ];
         }
 
         return response()->json($output, 200);

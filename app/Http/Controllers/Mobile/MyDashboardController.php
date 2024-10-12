@@ -95,12 +95,17 @@ class MyDashboardController extends Controller
             $title = 'Kamu tidak ada jadwal hari ini';
         }
 
+        $count_notif = DB::table('log_notif')
+            ->where('log_notif_user_id', auth()->user()->user_id)
+            ->where('log_notif_is_read', 0)
+            ->count();
 
         $data = [
             'user' => convertResponseSingle($data_user),
             'schedule' => $data_schedule ? convertResponseSingle($data_schedule) : new \stdClass(),
             'presence' => $data_presence ? convertResponseSingle($data_presence) : new \stdClass(),
             'title' => $title,
+            'notif' => $count_notif
         ];
 
         $output = [
