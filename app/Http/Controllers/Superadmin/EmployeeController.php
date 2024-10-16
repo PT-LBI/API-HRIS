@@ -353,6 +353,8 @@ class EmployeeController extends Controller
         $rules = [
             'user_name' => 'required',
             'email' => 'required|email|unique:users,email,' . $id . ',user_id',
+            'password' => 'nullable|min:6|max:20',
+            'repeat_password' => 'nullable|same:password',
             'user_company_id' => 'required|integer',
             'user_division_id' => 'required|integer',
             'user_province_id' => 'required|integer',
@@ -378,7 +380,11 @@ class EmployeeController extends Controller
 
         // Validate the request
         $validator = Validator::make($request->all(), $rules);
-
+        
+        // Menggunakan sometimes untuk repeat_password hanya jika password diisi
+        $validator->sometimes('repeat_password', 'required', function ($input) {
+            return !empty($input->password);
+        });
 
         //define validation rules
         // if ($check_data->user_profile_url !== request()->file('user_profile_url')) {
