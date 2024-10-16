@@ -81,6 +81,16 @@ class AuthController extends Controller
                 'message' => "Anda belum memiliki permission!"
             ], 401);
         }
+        
+        // try {
+        //     if (!$token = JWTAuth::attempt($credentials)) {
+        //         return response()->json(['error' => 'Invalid credentials'], 400);
+        //     }
+        // } catch (TokenExpiredException $e) {
+        //     return response()->json(['error' => 'Token expired'], 401);
+        // } catch (TokenInvalidException $e) {
+        //     return response()->json(['error' => 'Invalid token'], 401);
+        // }
 
         $user = auth()->user();
 
@@ -151,8 +161,8 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 1
-            // 'expires_in' => auth()->factory()->getTTL() * 60 * 60 * 7
+            // 'expires_in' => auth()->factory()->getTTL() * 1
+            'expires_in' => auth()->factory()->getTTL() * 60 * 60 * 7 * 100
         ]);
     }
 
