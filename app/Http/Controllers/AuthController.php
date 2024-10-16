@@ -13,6 +13,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 
 class AuthController extends Controller
@@ -44,6 +46,15 @@ class AuthController extends Controller
             ], 200);
         } else {
             $user = auth()->user();
+            if (auth()->payload()->get('exp') < now()->timestamp) {
+                // Jika token kadaluarsa
+                return response()->json([
+                    'code' => 401,
+                    'status' => 'Unauthorized',
+                    'message' => "Token Anda telah kadaluarsa, silakan login kembali!"
+                ], 401);
+            }
+
             // Check if the user has a role of 'finance' or 'superadmin'
             if (!in_array($user->user_role, ['superadmin','admin','finance','manager','owner', 'hr'])) {
                 return response()->json([
@@ -82,16 +93,6 @@ class AuthController extends Controller
             ], 401);
         }
         
-        // try {
-        //     if (!$token = JWTAuth::attempt($credentials)) {
-        //         return response()->json(['error' => 'Invalid credentials'], 400);
-        //     }
-        // } catch (TokenExpiredException $e) {
-        //     return response()->json(['error' => 'Token expired'], 401);
-        // } catch (TokenInvalidException $e) {
-        //     return response()->json(['error' => 'Invalid token'], 401);
-        // }
-
         $user = auth()->user();
 
         // Check if the user has a role of 'finance' or 'superadmin'

@@ -27,29 +27,30 @@ use App\Http\Controllers\Mobile\MyPresenceController;
 use App\Http\Controllers\Mobile\MyNotifController;
 use App\Http\Controllers\Mobile\MyPayrollController;
 use App\Http\Controllers\Mobile\MyDashboardController;
+use App\Http\Middleware\TokenExpiredMiddleware;
 
 Route::group(['middleware' => 'api'], function () {
     Route::get('check/health', [PublicController::class, 'checkHealth']);
     Route::get('district/{id}', [PublicController::class, 'district']);
     Route::get('province', [PublicController::class, 'province']);
-    Route::get('pdf', [ReportIncomeController::class, 'export_pdf']);
+    // Route::get('pdf', [ReportIncomeController::class, 'export_pdf']);
     Route::post('user/create', [UserController::class, 'create']);
 });
 
-Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
-    Route::post('login', [AuthController::class, 'login']);
+Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
+    Route::get('login', [AuthController::class, 'login'])->name('login');
+    Route::post('login', [AuthController::class, 'login'])->name('login');
     Route::post('login/mobile', [AuthController::class, 'login_mobile']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::patch('/update_fcm_token', [AuthController::class, 'update_fcm_token']);
 });
 
-Route::get('/test', function () {
-    return JWTAuth::parseToken()->authenticate();
- });
 
 // Route::group(['middleware' => 'api', 'prefix' => 'user'], function () {
+// Route::middleware(['auth:api', TokenExpiredMiddleware::class])->group(function() {
 Route::middleware('auth:api')->group(function() {
 
+// Route::middleware(['auth:api', 'token.expired'])->group(function() {
     Route::group(['prefix' => 'user'], function () {
         Route::get('', [UserController::class, 'index']);
         // Route::post('/create', [UserController::class, 'create']);
