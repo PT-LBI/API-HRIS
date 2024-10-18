@@ -353,6 +353,8 @@ class EmployeeController extends Controller
         $rules = [
             'user_name' => 'required',
             'email' => 'required|email|unique:users,email,' . $id . ',user_id',
+            'password' => 'nullable|min:6|max:20',
+            'repeat_password' => 'nullable|same:password',
             'user_company_id' => 'required|integer',
             'user_division_id' => 'required|integer',
             'user_province_id' => 'required|integer',
@@ -378,7 +380,11 @@ class EmployeeController extends Controller
 
         // Validate the request
         $validator = Validator::make($request->all(), $rules);
-
+        
+        // Menggunakan sometimes untuk repeat_password hanya jika password diisi
+        $validator->sometimes('repeat_password', 'required', function ($input) {
+            return !empty($input->password);
+        });
 
         //define validation rules
         // if ($check_data->user_profile_url !== request()->file('user_profile_url')) {
@@ -421,45 +427,84 @@ class EmployeeController extends Controller
                 Storage::disk('public')->delete($old_image_path);
             }
         }
-        
-        $res = $check_data->update([
-            'user_name'             => $request->user_name,
-            'email'                 => $request->email,
-            'password'              => isset($request->password) ? Hash::make($request->password) : $check_data->password,
-            'user_address'          => $request->user_address,
-            'user_driving_license' => $request->user_driving_license,
-            'user_identity_number'  => $request->user_identity_number,
-            'user_npwp'             => $request->user_npwp,
-            'user_bpjs_kes'         => $request->user_bpjs_kes,
-            'user_bpjs_tk'          => $request->user_bpjs_tk,
-            'user_place_birth'      => $request->user_place_birth,
-            'user_date_birth'       => $request->user_date_birth,
-            'user_last_education'   => $request->user_last_education,
-            'user_marital_status'   => $request->user_marital_status,
-            'user_number_children'  => $request->user_number_children,
-            'user_emergency_contact'    => $request->user_emergency_contact,
-            'user_gender'           => $request->user_gender,
-            'user_join_date'        => $request->user_join_date,
-            'user_bank_name'        => $request->user_bank_name,
-            'user_account_name'     => $request->user_account_name,
-            'user_account_number'   => $request->user_account_number,
-            'user_company_id'       => $request->user_company_id,
-            'user_division_id'      => $request->user_division_id,
-            'user_position'         => $request->user_position,
-            'user_province_id'      => $request->user_province_id,
-            'user_province_name'    => $request->user_province_name,
-            'user_district_id'      => $request->user_district_id,
-            'user_district_name'    => $request->user_district_name,
-            'user_location_is_determined'   => $request->user_location_is_determined,
-            'user_location_id'      => $request->user_location_id,
-            'user_blood_type'       => $request->user_blood_type,
-            'user_status'           => $request->user_status,
-            'user_role'             => $request->user_role,
-            'user_type'             => $request->user_type,
-            'user_profile_url'      => isset($image_url) ? $image_url : $check_data->user_profile_url,
-            'updated_at'            => now()->addHours(7),
-        ]);
 
+        if (isset($request->password) && !empty($request->password)) {
+            $res = $check_data->update([
+                'user_name'             => $request->user_name,
+                'email'                 => $request->email,
+                'password'              => Hash::make($request->password),
+                'user_address'          => $request->user_address,
+                'user_driving_license' => $request->user_driving_license,
+                'user_identity_number'  => $request->user_identity_number,
+                'user_npwp'             => $request->user_npwp,
+                'user_bpjs_kes'         => $request->user_bpjs_kes,
+                'user_bpjs_tk'          => $request->user_bpjs_tk,
+                'user_place_birth'      => $request->user_place_birth,
+                'user_date_birth'       => $request->user_date_birth,
+                'user_last_education'   => $request->user_last_education,
+                'user_marital_status'   => $request->user_marital_status,
+                'user_number_children'  => $request->user_number_children,
+                'user_emergency_contact'    => $request->user_emergency_contact,
+                'user_gender'           => $request->user_gender,
+                'user_join_date'        => $request->user_join_date,
+                'user_bank_name'        => $request->user_bank_name,
+                'user_account_name'     => $request->user_account_name,
+                'user_account_number'   => $request->user_account_number,
+                'user_company_id'       => $request->user_company_id,
+                'user_division_id'      => $request->user_division_id,
+                'user_position'         => $request->user_position,
+                'user_province_id'      => $request->user_province_id,
+                'user_province_name'    => $request->user_province_name,
+                'user_district_id'      => $request->user_district_id,
+                'user_district_name'    => $request->user_district_name,
+                'user_location_is_determined'   => $request->user_location_is_determined,
+                'user_location_id'      => $request->user_location_id,
+                'user_blood_type'       => $request->user_blood_type,
+                'user_status'           => $request->user_status,
+                'user_role'             => $request->user_role,
+                'user_type'             => $request->user_type,
+                'user_profile_url'      => isset($image_url) ? $image_url : $check_data->user_profile_url,
+                'updated_at'            => now()->addHours(7),
+            ]);
+        } else {
+            $res = $check_data->update([
+                'user_name'             => $request->user_name,
+                'email'                 => $request->email,
+                'user_address'          => $request->user_address,
+                'user_driving_license' => $request->user_driving_license,
+                'user_identity_number'  => $request->user_identity_number,
+                'user_npwp'             => $request->user_npwp,
+                'user_bpjs_kes'         => $request->user_bpjs_kes,
+                'user_bpjs_tk'          => $request->user_bpjs_tk,
+                'user_place_birth'      => $request->user_place_birth,
+                'user_date_birth'       => $request->user_date_birth,
+                'user_last_education'   => $request->user_last_education,
+                'user_marital_status'   => $request->user_marital_status,
+                'user_number_children'  => $request->user_number_children,
+                'user_emergency_contact'    => $request->user_emergency_contact,
+                'user_gender'           => $request->user_gender,
+                'user_join_date'        => $request->user_join_date,
+                'user_bank_name'        => $request->user_bank_name,
+                'user_account_name'     => $request->user_account_name,
+                'user_account_number'   => $request->user_account_number,
+                'user_company_id'       => $request->user_company_id,
+                'user_division_id'      => $request->user_division_id,
+                'user_position'         => $request->user_position,
+                'user_province_id'      => $request->user_province_id,
+                'user_province_name'    => $request->user_province_name,
+                'user_district_id'      => $request->user_district_id,
+                'user_district_name'    => $request->user_district_name,
+                'user_location_is_determined'   => $request->user_location_is_determined,
+                'user_location_id'      => $request->user_location_id,
+                'user_blood_type'       => $request->user_blood_type,
+                'user_status'           => $request->user_status,
+                'user_role'             => $request->user_role,
+                'user_type'             => $request->user_type,
+                'user_profile_url'      => isset($image_url) ? $image_url : $check_data->user_profile_url,
+                'updated_at'            => now()->addHours(7),
+            ]);
+        }
+            
         if ($res) {
             $output = [
                 'code'      => 200,

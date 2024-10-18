@@ -144,7 +144,7 @@ class AnnouncementController extends Controller
                         'created_at' => now()->addHours(7),
                     ];
 
-                    sendFirebaseNotification($user->user_fcm_token, $title , request('announcement_title'));
+                    // sendFirebaseNotification($user->user_fcm_token, $title , request('announcement_title'));
                 }
                 
                 // Insert batch notifikasi ke database
