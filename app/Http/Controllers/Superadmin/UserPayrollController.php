@@ -254,7 +254,7 @@ class UserPayrollController extends Controller
             //Mengonversi array menjadi JSON string
             $logNotifJson = json_encode($dataNotif);
 
-            sendFirebaseNotification($check_data->user_fcm_token, $title, $msg);
+            // sendFirebaseNotification($check_data->user_fcm_token, $title, $msg);
 
             LogNotif::create([
                 'log_notif_user_id' => $id,
