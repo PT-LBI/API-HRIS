@@ -7,6 +7,7 @@ use App\Models\Leave;
 use App\Models\LeaveDetail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class MyLeaveController extends Controller
 {
@@ -106,7 +107,9 @@ class MyLeaveController extends Controller
             ], 422);
         }
 
-        if (now()->addHours(7) > request('leave_start_date')) {
+        $leaveStartDate = Carbon::parse(request('leave_start_date'));
+
+        if (now()->startOfDay()->greaterThan($leaveStartDate)) {
             return response()->json([
                 'code' => 422,
                 'status' => 'error',
