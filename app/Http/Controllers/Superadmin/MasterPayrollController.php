@@ -525,6 +525,7 @@ class MasterPayrollController extends Controller
                         'user_payroll_payroll_id' => $master->payroll_id,
                         'user_payroll_value' => $master->payroll_value,
                         'user_payroll_overtime_hour' => $master->payroll_overtime_hour,
+                        'user_payroll_total_accepted' => $master->payroll_value,
                         'user_payroll_status' => 'waiting',
                         'created_at' => now()->addHours(7),
                         'updated_at' => null,
