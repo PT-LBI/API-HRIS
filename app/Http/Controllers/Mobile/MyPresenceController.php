@@ -425,8 +425,8 @@ class MyPresenceController extends Controller
                 ->leftjoin('schedules', 'presence_schedule_id', '=', 'schedule_id')
                 ->leftjoin('shifts', 'schedule_shift_id', '=', 'shift_id')
                 ->where('presence.deleted_at', null)
-                ->where('presence_user_id', auth()->user()->user_id)
-                ->whereIn('presence_status', ['in', 'out']);
+                ->where('presence_user_id', auth()->user()->user_id);
+                // ->whereIn('presence_status', ['in', 'out']);
             $total_all = $queryTotal->count();
 
             $data = [
