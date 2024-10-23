@@ -409,13 +409,19 @@ class MyPresenceController extends Controller
                     'shift_name',
                     'presence_in_time',
                     'presence_out_time',
+                    DB::raw("
+                        CASE 
+                            WHEN presence.presence_status IN ('in', 'out') THEN 'reguler'
+                            ELSE 'overtime'
+                        END as presence_status
+                    "),
                     DB::raw("TIMEDIFF(presence_out_time, presence_in_time) as working_hours"),
                 )
                 ->leftjoin('schedules', 'presence_schedule_id', '=', 'schedule_id')
                 ->leftjoin('shifts', 'schedule_shift_id', '=', 'shift_id')
                 ->where('presence.deleted_at', null)
-                ->where('presence_user_id', auth()->user()->user_id)
-                ->whereIn('presence_status', ['in', 'out']);
+                ->where('presence_user_id', auth()->user()->user_id);
+                // ->whereIn('presence_status', ['in', 'out']);
 
             $query->orderBy($sort, $dir);
             $res = $query->paginate($limit, ['*'], 'page', $page);
@@ -425,8 +431,8 @@ class MyPresenceController extends Controller
                 ->leftjoin('schedules', 'presence_schedule_id', '=', 'schedule_id')
                 ->leftjoin('shifts', 'schedule_shift_id', '=', 'shift_id')
                 ->where('presence.deleted_at', null)
-                ->where('presence_user_id', auth()->user()->user_id)
-                ->whereIn('presence_status', ['in', 'out']);
+                ->where('presence_user_id', auth()->user()->user_id);
+                // ->whereIn('presence_status', ['in', 'out']);
             $total_all = $queryTotal->count();
 
             $data = [
