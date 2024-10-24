@@ -409,11 +409,18 @@ class MyPresenceController extends Controller
                     'shift_name',
                     'presence_in_time',
                     'presence_out_time',
+                    'presence_in_longitude',
+                    'presence_in_latitude',
+                    'presence_out_longitude',
+                    'presence_out_latitude',
+                    'presence_in_photo',
+                    'presence_out_photo',
+                    'presence_status',
                     DB::raw("
                         CASE 
                             WHEN presence.presence_status IN ('in', 'out') THEN 'reguler'
                             ELSE 'overtime'
-                        END as presence_status
+                        END as presence_type
                     "),
                     DB::raw("TIMEDIFF(presence_out_time, presence_in_time) as working_hours"),
                 )
@@ -442,6 +449,7 @@ class MyPresenceController extends Controller
                 'per_page' => $res->perPage(),
                 'total' => $res->total(),
                 'total_all' => $total_all,
+                // 'data' => $res->items(),
                 'data' => convertResponseArray($res->items()),
             ];
 
