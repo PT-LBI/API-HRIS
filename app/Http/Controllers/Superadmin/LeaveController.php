@@ -54,9 +54,11 @@ class LeaveController extends Controller
                     'leave_image',
                     'leave_desc',
                 )
-                ->where('leave.deleted_at', null)
                 ->leftjoin('users', 'leave_user_id', '=', 'user_id')
-                ->leftjoin('companies', 'user_company_id', '=', 'company_id');
+                ->leftjoin('companies', 'user_company_id', '=', 'company_id')
+                ->where('leave.deleted_at', null)
+                ->where('users.deleted_at', null)
+                ->where('users.user_status', 'active');
             
             if (!empty($search)) {
                 $query->where(function ($query) use ($search) {
@@ -90,9 +92,11 @@ class LeaveController extends Controller
             //get total data
             $queryTotal = Leave::query()
                 ->select('1 as total')
-                ->where('leave.deleted_at', null)
                 ->leftjoin('users', 'leave_user_id', '=', 'user_id')
-                ->leftjoin('companies', 'user_company_id', '=', 'company_id');
+                ->leftjoin('companies', 'user_company_id', '=', 'company_id')
+                ->where('leave.deleted_at', null)
+                ->where('users.deleted_at', null)
+                ->where('users.user_status', 'active');
                 
             if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
                 $queryTotal->where('company_id', auth()->user()->user_company_id);
@@ -215,16 +219,9 @@ class LeaveController extends Controller
             $title = 'Cuti';
             $body = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
 
-            $notif = sendFirebaseNotification($token, $title, $body);
-            
-            // $message = 'Status cuti Anda telah diupdate menjadi ' . $request->leave_status;
+            // sendFirebaseNotification($token, $title, $body);
 
             // $get_user = User::find($check_data->leave_user_id);
-            // // Kirim notifikasi
-            // $is_send = Notification::send($get_user, new SendNotif($message));
-            // // dd($)
-            // dd($is_send);
-
 
             // if($is_send) {
                 $dataNotif = [
