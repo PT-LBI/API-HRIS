@@ -323,7 +323,7 @@ class EmployeeController extends Controller
 
         $data = [
             'user' => $user ? convertResponseSingle($user) :'',
-            'payroll' => $payroll ? convertResponseSingle($payroll) :'',
+            'payroll' => $payroll ? convertResponseSingle($payroll) : (object) [],
         ];
 
         $output = [
