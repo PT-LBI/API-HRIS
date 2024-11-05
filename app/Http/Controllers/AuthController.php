@@ -43,7 +43,7 @@ class AuthController extends Controller
                 'code' => 401,
                 'status' => 'Unauthorized',
                 'message' => "Anda belum memiliki permission!"
-            ], 200);
+            ], 401);
         } else {
             $user = auth()->user();
             if (auth()->payload()->get('exp') < now()->timestamp) {
