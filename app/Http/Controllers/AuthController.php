@@ -94,30 +94,40 @@ class AuthController extends Controller
                 'status' => 'Unauthorized',
                 'message' => "Anda belum memiliki permission!"
             ], 401);
+        } else {
+            $user = auth()->user();
+            if (auth()->payload()->get('exp') < now()->timestamp) {
+                // Jika token kadaluarsa
+                return response()->json([
+                    'code' => 401,
+                    'status' => 'Unauthorized',
+                    'message' => "Token Anda telah kadaluarsa, silakan login kembali!"
+                ], 401);
+            }
+    
+            // Check if the user has a role of 'finance' or 'superadmin'
+            if (!in_array($user->user_role, ['superadmin','admin','finance','manager','owner', 'hr', 'staff'])) {
+                return response()->json([
+                    'code' => 403,
+                    'status' => 'Forbidden',
+                    'message' => "Anda tidak memiliki izin untuk login!"
+                ], 403);
+            } else {
+                $user = Auth::user();
+                $user->update(['api_token' => $token]); 
+                
+                $output = [
+                    'code'      => 200,
+                    'status'    => 'success',
+                    'message'   => 'Berhasil Login',
+                    'result'     => [
+                        'user'          => convertResponseSingle(auth()->user()),
+                        'data_token'    => $token,
+                    ]
+                ];
+            }
         }
         
-        $user = auth()->user();
-
-        // Check if the user has a role of 'finance' or 'superadmin'
-        if (!in_array($user->user_role, ['superadmin','admin','finance','manager','owner', 'hr', 'staff'])) {
-            return response()->json([
-                'code' => 403,
-                'status' => 'Forbidden',
-                'message' => "Anda tidak memiliki izin untuk login!"
-            ], 403);
-        }
-
-        $output = [
-            'code'      => 200,
-            'status'    => 'success',
-            'message'   => 'Berhasil Login',
-            'result'     => [
-                'user'          => convertResponseSingle(auth()->user()),
-                'data_token'    => $token,
-            ]
-        ];
-        
-
         return response()->json($output, 200);
     }
 
