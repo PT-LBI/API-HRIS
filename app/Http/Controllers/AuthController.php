@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-// use Illuminate\Http\Request;
-// use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Controller;
 // use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
@@ -11,7 +12,6 @@ use App\Http\Controllers\Controller;
 // use App\Models\User;
 // use Illuminate\Support\Str;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
@@ -43,7 +43,7 @@ class AuthController extends Controller
                 'code' => 401,
                 'status' => 'Unauthorized',
                 'message' => "Anda belum memiliki permission!"
-            ], 200);
+            ], 401);
         } else {
             $user = auth()->user();
             if (auth()->payload()->get('exp') < now()->timestamp) {
@@ -63,6 +63,9 @@ class AuthController extends Controller
                     'message' => "Anda tidak memiliki izin untuk login!"
                 ], 403);
             } else {
+                $user = Auth::user();
+                $user->update(['api_token' => $token]); 
+
                 $output = [
                     'code'      => 200,
                     'status'    => 'success',
@@ -162,8 +165,8 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            // 'expires_in' => auth()->factory()->getTTL() * 1
-            'expires_in' => auth()->factory()->getTTL() * 60 * 60 * 7 * 100
+            'expires_in' =>  auth()->factory()->getTTL() 
+            // 'expires_in' => auth()->factory()->getTTL() * 60 * 60 * 7 * 100
         ]);
     }
 
