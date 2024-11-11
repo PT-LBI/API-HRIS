@@ -42,7 +42,7 @@ class AuthController extends Controller
             return response()->json([
                 'code' => 401,
                 'status' => 'Unauthorized',
-                'message' => "Anda belum memiliki permission!"
+                'message' => "Maaf, email atau password salah, silahkan coba lagi."
             ], 401);
         } else {
             $user = auth()->user();
@@ -93,7 +93,7 @@ class AuthController extends Controller
             return response()->json([
                 'code' => 401,
                 'status' => 'Unauthorized',
-                'message' => "Anda belum memiliki permission!"
+                'message' => "Maaf, email atau password salah, silahkan coba lagi."
             ], 401);
         } else {
             // Cek apakah token sudah kadaluarsa
