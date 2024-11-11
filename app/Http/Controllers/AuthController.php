@@ -51,7 +51,7 @@ class AuthController extends Controller
                 return response()->json([
                     'code' => 401,
                     'status' => 'Unauthorized',
-                    'message' => "Token Anda telah kadaluarsa, silakan login kembali!"
+                    'message' => "Maaf, session anda telah berakhir. Silahkan login kembali"
                 ], 401);
             }
 
@@ -89,21 +89,23 @@ class AuthController extends Controller
         $credentials = request(['email', 'password']);
 
         if (! $token = auth()->attempt($credentials)) {
+            // Jika kredensial salah, langsung tampilkan pesan kesalahan
             return response()->json([
                 'code' => 401,
                 'status' => 'Unauthorized',
                 'message' => "Anda belum memiliki permission!"
             ], 401);
         } else {
-            $user = auth()->user();
+            // Cek apakah token sudah kadaluarsa
             if (auth()->payload()->get('exp') < now()->timestamp) {
-                // Jika token kadaluarsa
                 return response()->json([
                     'code' => 401,
                     'status' => 'Unauthorized',
-                    'message' => "Token Anda telah kadaluarsa, silakan login kembali!"
+                    'message' => "Maaf, session anda telah berakhir. Silahkan login kembali"
                 ], 401);
             }
+
+            $user = auth()->user();
     
             // Check if the user has a role of 'finance' or 'superadmin'
             if (!in_array($user->user_role, ['superadmin','admin','finance','manager','owner', 'hr', 'staff'])) {
