@@ -46,7 +46,7 @@ class MyProfileController extends Controller
 
         if ($data) {
             $output = [
-                'code' => 500,
+                'code' => 200,
                 'status' => 'success',
                 'message' => 'Data ditemukan',
                 'result' => convertResponseSingle($data),
@@ -60,6 +60,6 @@ class MyProfileController extends Controller
             ];
         }
 
-        return response()->json($output, 500);
+        return response()->json($output, 200);
     }
 }
