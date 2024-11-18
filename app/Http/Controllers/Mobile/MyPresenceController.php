@@ -140,8 +140,38 @@ class MyPresenceController extends Controller
                 'result' => []
             ], 404);
         }
-
+        
+        $validTransitions = [
+            'in' => 'out',
+            'out' => 'ovt_in',
+            'ovt_in' => 'ovt_out',
+        ];
+        
+        $lastStatus = $this->getLastPresenceStatus(request('schedule_id'));
+        
+        // Validasi transisi status
+        if ($lastStatus) {
+            $expectedNextStatus = $validTransitions[$lastStatus] ?? null;
+            if ($expectedNextStatus !== request('type')) {
+                return response()->json([
+                    'code' => 422,
+                    'status' => 'error',
+                    'message' => "Status absensi tidak sesuai urutan. Harusnya $expectedNextStatus setelah $lastStatus.",
+                    'result' => []
+                ], 422);
+            }
+        } elseif (request('type') !== 'in') {
+            // Jika tidak ada status sebelumnya, hanya status 'in' yang diperbolehkan
+            return response()->json([
+                'code' => 422,
+                'status' => 'error',
+                'message' => 'Status pertama harus "in".',
+                'result' => []
+            ], 422);
+        }
+        
         $check_presence = $this->checkPresence(request('schedule_id'), request('type'));
+
         $typeMessages = [
             'in' => 'Anda sudah melakukan absen masuk',
             'out' => 'Anda sudah melakukan absen keluar',
@@ -323,27 +353,24 @@ class MyPresenceController extends Controller
     }
 
     public function checkPresence($schedule_id, $type) {
-        if ($type == 'in' || $type == 'out') {
-            $check_presence = Presence::where('presence_schedule_id', $schedule_id)
-                ->where('presence_user_id', auth()->user()->user_id)
-                ->where('deleted_at', null)
-                ->where(function ($query) {
-                    $query->where('presence_status', 'in')
-                        ->orWhere('presence_status', 'out');
-                })
-                ->first();
-        } elseif ($type == 'ovt_in' || $type == 'ovt_out') {
-            $check_presence = Presence::where('presence_schedule_id', $schedule_id)
-                ->where('presence_user_id', auth()->user()->user_id)
-                ->where('deleted_at', null)
-                ->where(function ($query) {
-                    $query->where('presence_status', 'ovt_in')
-                        ->orWhere('presence_status', 'ovt_out');
-                })
-                ->first();
-        }
+        $statusGroup = in_array($type, ['in', 'out']) 
+            ? ['in', 'out'] 
+            : ['ovt_in', 'ovt_out'];
 
-        return $check_presence;
+        return Presence::where('presence_schedule_id', $schedule_id)
+            ->where('presence_user_id', auth()->user()->user_id)
+            ->where('deleted_at', null)
+            ->whereIn('presence_status', $statusGroup)
+            ->first();
+
+    }
+
+    public function getLastPresenceStatus($schedule_id) {
+        return Presence::where('presence_schedule_id', $schedule_id)
+            ->where('presence_user_id', auth()->user()->user_id)
+            ->where('deleted_at', null)
+            ->orderBy('presence_id', 'desc') // Asumsi id adalah kolom auto-increment
+            ->value('presence_status'); // Hanya ambil status terakhir
     }
 
     //for testing purpose
