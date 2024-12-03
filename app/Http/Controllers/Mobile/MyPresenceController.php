@@ -236,11 +236,17 @@ class MyPresenceController extends Controller
                 $requestDate = Carbon::parse(request('date'));
                 $shiftFinishTime = Carbon::parse($get_shift->shift_finish_time);
 
-                // Calculate the difference in seconds
-                $extra_seconds = $shiftFinishTime->diffInSeconds($requestDate, false);
+                $shiftFinishDateTime = $requestDate->copy()->setTimeFrom($shiftFinishTime);
 
-                // Convert seconds to HH:MM:SS format
-                $extra_time = gmdate('H:i:s', abs($extra_seconds));
+                if ($requestDate->greaterThan($shiftFinishDateTime)) {
+                    // Calculate the difference in seconds
+                    $extra_seconds = $shiftFinishTime->diffInSeconds($requestDate, false);
+                    
+                    // Convert seconds to HH:MM:SS format
+                    $extra_time = gmdate('H:i:s', abs($extra_seconds));
+                } else {
+                    $extra_time = '00:00:00';
+                }
 
                 $get_presence = Presence::where('presence_schedule_id', request('schedule_id'))
                     ->where('presence_user_id', auth()->user()->user_id)
