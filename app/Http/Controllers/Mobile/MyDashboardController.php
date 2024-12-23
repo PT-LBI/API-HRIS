@@ -46,7 +46,7 @@ class MyDashboardController extends Controller
                 'shift_name',
                 'shift_start_time',
                 'shift_finish_time',
-                DB::raw('TIMEDIFF(shifts.shift_finish_time, shifts.shift_start_time) as shift_duration'),
+                // DB::raw('TIMEDIFF(shifts.shift_finish_time, shifts.shift_start_time) as shift_duration'),
                 'schedule_date',
                 'schedule_leave_id',
                 'leave_type',
@@ -95,6 +95,19 @@ class MyDashboardController extends Controller
             $data_presence = null;
             $title = 'Kamu tidak ada jadwal hari ini';
         }
+
+        //get difference time
+        if ($data_presence) {
+            if (!empty($data_presence['presence_in_time']) && !empty($data_presence['presence_out_time'])) {
+                $shift_duration = Carbon::parse($data_presence['presence_out_time'])->diff(Carbon::parse($data_presence['presence_in_time']))->format('%H:%I:%S');
+            } else if (!empty($data_presence['presence_in_time'])) {
+                $shift_duration = Carbon::parse($data_presence['presence_in_time'])->diff(Carbon::now()->addHours(7))->format('%H:%I:%S');
+            } else {
+                $shift_duration = '00:00:00';
+            }
+        }
+
+        $data_schedule['shift_duration'] = isset($shift_duration) ? $shift_duration : '00:00:00';
 
         $count_notif = DB::table('log_notif')
             ->where('log_notif_user_id', auth()->user()->user_id)

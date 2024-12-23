@@ -23,8 +23,9 @@ class ScheduleController extends Controller
         $company_id = request()->query('company_id');
         $year = request()->query('year') ?? now()->year;
         $month = request()->query('month') ?? now()->month;
+        $search = request()->query('search');
 
-        $dates = $this->getDatesOfMonth($year, $month);
+        $dates = $this->getDatesOfMonth($year, $month, $search);
         $query = $this->getUserQuery($division_id, $company_id, $sort, $dir);
 
         $res = $query->paginate($limit, ['*'], 'page', $page);
@@ -42,7 +43,7 @@ class ScheduleController extends Controller
         ]);
     }
 
-    private function getDatesOfMonth($year, $month)
+    private function getDatesOfMonth($year, $month, $search)
     {
         $startDate = Carbon::create($year, $month, 1)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
