@@ -176,7 +176,7 @@ class ReportController extends Controller
 
         try {
             $user_id = request()->query('user_id');
-            $month = request()->query('month') ?? date('m');
+            $month = str_pad(request()->query('month') ?? date('m'), 2, '0', STR_PAD_LEFT);
             $year = request()->query('year') ?? date('Y');
             
             $dates = $this->getDatesOfMonth($year, $month);
