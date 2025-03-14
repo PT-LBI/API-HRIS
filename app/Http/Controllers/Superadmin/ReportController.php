@@ -34,9 +34,9 @@ class ReportController extends Controller
             $dir = request()->query('dir') ?? 'DESC';
             $search = request()->query('search');
             $company_id = request()->query('company_id');
-            $month = request()->query('month') ?? date('m');
+            $month = str_pad(request()->query('month') ?? date('m'), 2, '0', STR_PAD_LEFT);
             $year = request()->query('year') ?? date('Y');
-            
+          
             $date = $year . '-' . $month;
             
             $query = User::query()
