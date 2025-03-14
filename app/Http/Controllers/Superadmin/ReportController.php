@@ -128,7 +128,7 @@ class ReportController extends Controller
                     $total_percentage = $value->total_presence / $value->total_schedule * 100;
                 }
                 // $total_percentage_new =  number_format((float)$total_percentage, 2, '.', '');
-                $res[$key]->total_percentage = $total_percentage;
+                $res[$key]->total_percentage = round($total_percentage, 2);
             }
 
             // get total data
