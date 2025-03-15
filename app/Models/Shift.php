@@ -21,6 +21,7 @@ class Shift extends Model
         'shift_start_time',
         'shift_finish_time',
         'shift_status',
+        'shift_is_different_day',
         'created_at',
         'updated_at',
         'deleted_at'
