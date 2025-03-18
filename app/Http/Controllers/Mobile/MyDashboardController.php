@@ -44,89 +44,61 @@ class MyDashboardController extends Controller
         //shifts previous
         $data_schedule_previous = $this->get_schedule($previous_date);
 
-        if (!empty($data_schedule_previous)) {
-             // check the previous day's shift
-            $get_shift = Shift::query()
-                ->select(
-                    'shift_id',
-                    'shift_name',
-                    'shift_start_time',
-                    'shift_finish_time',
-                    'shift_is_different_day'
-                )
-                ->where('shift_id', $data_schedule_previous['schedule_shift_id'])
-                ->first();
-
-            // jika shift malam, maka ngecek presensi sebelumnya
-            if ($get_shift['shift_is_different_day'] == 1) {
+        if (!empty($data_schedule_previous && $data_schedule_previous['shift_is_different_day'] == 1)) {
  
-                $previous_presence = $this->check_previous_presence($previous_date );
-                
-                if ($previous_presence['schedule'] == 'previous') {
-                    //replace schedule date with previous date
-                    $data_presence = $previous_presence;
-                    $data_schedule = $data_schedule_previous;
+            $previous_presence = $this->check_previous_presence($previous_date );
+            
+            if ($previous_presence['schedule'] == 'previous') {
+                //replace schedule date with previous date
+                $data_presence = $previous_presence;
 
-                    $title = $this->get_title($previous_presence['status']);
-                } else {
-                    $data_schedule = $this->get_schedule($date);
-                    $data_presence = Presence::query()
-                        ->select(
-                            'presence_id',
-                            'presence_schedule_id',
-                            'presence_in_time',
-                            'presence_out_time',
-                            'presence_status',
-                        )
-                        ->where('deleted_at', null)
-                        ->where('presence_user_id', auth()->user()->user_id)
-                        // ->whereDate('presence_in_time', $date)
-                        ->where('presence_schedule_id', $data_schedule['schedule_id'])
-                        ->orderBy('presence_id', 'DESC')
-                        ->first();
+                $data_schedule_previous['shift_start_time'] = $data_schedule_previous['schedule_date'] . ' ' . $data_schedule_previous['shift_start_time'];
+                $data_schedule_previous['shift_finish_time'] = Carbon::parse($data_schedule_previous['schedule_date'])->addDay()->format('Y-m-d') . ' ' . $data_schedule_previous['shift_finish_time'];
+                $data_schedule = $data_schedule_previous;
 
-                    if (!empty($data_presence)) {
-                        $title = $this->get_title($data_presence['presence_status']);
-                    } else {
-                        $title = 'Kamu belum absensi hari ini';
-                    }
-                }
+                $title = $this->get_title($previous_presence['status']);
             } else {
                 $data_schedule = $this->get_schedule($date);
 
-                if (!empty($data_schedule)){
-                    if ($data_schedule['leave_type'] == 'leave') {
-                        $title = 'Hari ini anda sedang cuti';
-                    } elseif ($data_schedule['leave_type'] == 'permission') {
-                        $title = 'Hari ini anda sedang izin';
-                    } else {
-                        $data_presence = Presence::query()
-                            ->select(
-                                'presence_id',
-                                'presence_schedule_id',
-                                'presence_in_time',
-                                'presence_out_time',
-                                'presence_status',
-                            )
-                            ->where('deleted_at', null)
-                            ->where('presence_user_id', auth()->user()->user_id)
-                            ->where('presence_schedule_id', $data_schedule['schedule_id'])
-                            ->orderBy('presence_id', 'DESC')
-                            ->first();
-        
-                        if ($data_presence) {
-                            $title = $this->get_title($data_presence['presence_status']);
-                        } else {
-                            $title = 'Kamu belum absensi hari ini';
-                        }
-                    }
+                if ($data_schedule['shift_is_different_day'] == 1) {
+                    $data_schedule['shift_start_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_start_time'];
+                    $data_schedule['shift_finish_time'] = Carbon::parse($data_schedule['schedule_date'])->addDay()->format('Y-m-d') . ' ' . $data_schedule['shift_finish_time'];
                 } else {
-                    $data_presence = null;
-                    $title = 'Kamu tidak ada jadwal hari ini';
+                    $data_schedule['shift_start_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_start_time'];
+                    $data_schedule['shift_finish_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_finish_time'];
+                }
+
+                $data_presence = Presence::query()
+                    ->select(
+                        'presence_id',
+                        'presence_schedule_id',
+                        'presence_in_time',
+                        'presence_out_time',
+                        'presence_status',
+                    )
+                    ->where('deleted_at', null)
+                    ->where('presence_user_id', auth()->user()->user_id)
+                    // ->whereDate('presence_in_time', $date)
+                    ->where('presence_schedule_id', $data_schedule['schedule_id'])
+                    ->orderBy('presence_id', 'DESC')
+                    ->first();
+
+                if (!empty($data_presence)) {
+                    $title = $this->get_title($data_presence['presence_status']);
+                } else {
+                    $title = 'Kamu belum absensi hari ini';
                 }
             }
         } else {
             $data_schedule = $this->get_schedule($date);
+
+            if ($data_schedule['shift_is_different_day'] == 1) {
+                $data_schedule['shift_start_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_start_time'];
+                $data_schedule['shift_finish_time'] = Carbon::parse($data_schedule['schedule_date'])->addDay()->format('Y-m-d') . ' ' . $data_schedule['shift_finish_time'];
+            } else {
+                $data_schedule['shift_start_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_start_time'];
+                $data_schedule['shift_finish_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_finish_time'];
+            }
 
             if (!empty($data_schedule)){
                 if ($data_schedule['leave_type'] == 'leave') {
@@ -161,27 +133,25 @@ class MyDashboardController extends Controller
         }
 
         //get difference time
-        if (isset($get_shift)) {
-            if ($get_shift['shift_is_different_day'] == 1) {
-                if ($data_presence) {
+        if ($data_schedule['shift_is_different_day'] == 1) {
+            if ($data_presence) {
+                $shift_duration = Carbon::parse($data_presence['presence_out_time'])->diff(Carbon::parse($data_presence['presence_in_time']))->format('%H:%I:%S');
+            } else {
+                $shift_duration = '00:00:00';
+            }
+        } else {
+            if ($data_presence) {
+                if (!empty($data_presence['presence_in_time']) && !empty($data_presence['presence_out_time'])) {
                     $shift_duration = Carbon::parse($data_presence['presence_out_time'])->diff(Carbon::parse($data_presence['presence_in_time']))->format('%H:%I:%S');
+                } else if (!empty($data_presence['presence_in_time'])) {
+                    $shift_duration = Carbon::parse($data_presence['presence_in_time'])->diff(Carbon::now()->addHours(7))->format('%H:%I:%S');
                 } else {
                     $shift_duration = '00:00:00';
                 }
-            } else {
-                if ($data_presence) {
-                    if (!empty($data_presence['presence_in_time']) && !empty($data_presence['presence_out_time'])) {
-                        $shift_duration = Carbon::parse($data_presence['presence_out_time'])->diff(Carbon::parse($data_presence['presence_in_time']))->format('%H:%I:%S');
-                    } else if (!empty($data_presence['presence_in_time'])) {
-                        $shift_duration = Carbon::parse($data_presence['presence_in_time'])->diff(Carbon::now()->addHours(7))->format('%H:%I:%S');
-                    } else {
-                        $shift_duration = '00:00:00';
-                    }
-                }
             }
-    
-            $data_schedule['shift_duration'] = isset($shift_duration) ? $shift_duration : '00:00:00';
         }
+
+        $data_schedule['shift_duration'] = isset($shift_duration) ? $shift_duration : '00:00:00';
 
         $count_notif = DB::table('log_notif')
             ->where('log_notif_user_id', auth()->user()->user_id)
@@ -214,6 +184,7 @@ class MyDashboardController extends Controller
                 'shift_name',
                 'shift_start_time',
                 'shift_finish_time',
+                'shift_is_different_day',
                 // DB::raw('TIMEDIFF(shifts.shift_finish_time, shifts.shift_start_time) as shift_duration'),
                 'schedule_date',
                 'schedule_leave_id',
