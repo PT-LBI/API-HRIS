@@ -26,11 +26,11 @@ class ScheduleController extends Controller
         $search = request()->query('search');
 
         $dates = $this->getDatesOfMonth($year, $month, $search);
-        $query = $this->getUserQuery($division_id, $company_id, $sort, $dir);
+        $query = $this->getUserQuery($division_id, $company_id, $sort, $dir, $search);
 
         $res = $query->paginate($limit, ['*'], 'page', $page);
         $users = $res->items();
-
+        
         $schedulesData = $this->getSchedulesData($users, $dates);
 
         $response = $this->formatResponse($res, $schedulesData);
@@ -57,36 +57,93 @@ class ScheduleController extends Controller
         return $dates;
     }
 
-    private function getUserQuery($division_id, $company_id, $sort, $dir)
+    private function getUserQuery($division_id, $company_id, $sort, $dir, $search)
     {
-        $query = User::where('user_status', 'active')
-            ->leftjoin('divisions', 'division_id', '=', 'user_division_id')
-            ->leftjoin('companies', 'company_id', '=', 'user_company_id')
-            ->where('user_role', '!=', 'superadmin')
+        $query = User::select([
+                'user_id',
+                'user_name',
+                'user_code',
+                'user_division_id',
+                'user_company_id',
+            ])
+            // ->leftJoin('divisions', 'divisions.division_id', '=', 'users.user_division_id')
+            // ->leftJoin('companies', 'companies.company_id', '=', 'users.user_company_id')
+            ->where('users.user_role', '!=', 'superadmin')
+            ->where('users.user_status', 'active')
             ->whereNull('users.deleted_at');
 
+
         if ($division_id) {
-            $query->where('division_id', $division_id);
+            $query->where('user_division_id', $division_id);
+        }
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('users.user_code', 'like', '%' . $search . '%')
+                  ->orWhere('users.email', 'like', '%' . $search . '%')
+                  ->orWhere('users.user_name', 'like', '%' . $search . '%');
+            });
         }
 
         if (auth()->user()->user_role == 'manager' || auth()->user()->user_role == 'admin') {
-            $query->where('company_id', auth()->user()->user_company_id);
+            $query->where('user_company_id', auth()->user()->user_company_id);
         } else {
             if ($company_id && $company_id !== null) {
-                $query->where('company_id', $company_id);
+                $query->where('user_company_id', $company_id);
             }
         }
+        // dd($query->toSql(), $query->getBindings());
 
         return $query->orderBy($sort, $dir);
     }
 
-    private function getSchedulesData($users, $dates)
+    private function getSchedulesData($userIds, $dates)
     {
-        return collect($users)->map(function ($user) use ($dates) {
+        return collect($userIds)->map(function ($user) use ($dates) {
             return [
                 'user_id' => $user->user_id,
                 'user_name' => $user->user_name,
                 'schedules' => convertResponseArray($this->getUserScheduleForDates($user->user_id, $dates))
+            ];
+        })->toArray();
+
+        // Ambil semua jadwal dalam satu query
+        // $schedules = Schedule::whereIn('schedule_user_id', $userIds)
+        //     ->whereIn('schedule_date', $dates)
+        //     ->whereNull('schedules.deleted_at')
+        //     ->leftJoin('shifts', 'shift_id', '=', 'schedule_shift_id')
+        //     ->leftJoin('leave', 'leave_id', '=', 'schedule_leave_id')
+        //     ->leftJoin('users', 'user_id', '=', 'schedule_user_id')
+        //     ->select('schedules.*', 'shift_name', 'leave_type', 'leave_desc')
+        //     ->get()
+        //     ->groupBy(fn ($item) => (int) $item->schedule_user_id); // Konversi key ke integer
+
+        // return collect($userIds)->map(function ($userId) use ($dates, $schedules) {
+        //     return [
+        //         'user_id' => $userId,
+        //         'schedules' => convertResponseArray($this->mapSchedulesForUser(
+        //             $schedules->get((int) $userId, collect()), // Konversi ke integer
+        //             $dates
+        //         ))
+        //     ];
+        // })->toArray();
+    }
+
+    private function mapSchedulesForUser($userSchedules, $dates)
+    {
+        $schedules = $userSchedules->keyBy('schedule_date');
+
+        return collect($dates)->map(function ($date) use ($schedules) {
+            $schedule = $schedules->get($date);
+
+            return [
+                'schedule_id' => $schedule ? $schedule->schedule_id : 0,
+                'schedule_date' => $date,
+                'shift_id' => $schedule ? $schedule->schedule_shift_id : 0,
+                'shift_name' => $schedule ? $schedule->shift_name : 'Pilih jadwal',
+                'leave_id' => $schedule ? $schedule->schedule_leave_id : 0,
+                'leave_type' => $schedule ? $schedule->leave_type : '',
+                'leave_desc' => $schedule ? $schedule->leave_desc : '',
             ];
         })->toArray();
     }
@@ -113,6 +170,30 @@ class ScheduleController extends Controller
                 'leave_desc' => $schedule ? $schedule->leave_desc : '',
             ];
         })->toArray();
+
+        // $schedules = Schedule::where('schedule_user_id', $userId)
+        //     ->whereIn('schedule_date', $dates)
+        //     ->whereNull('schedules.deleted_at')
+        //     ->leftJoin('shifts', 'shift_id', '=', 'schedule_shift_id')
+        //     ->leftJoin('leave', 'leave_id', '=', 'schedule_leave_id')
+        //     ->leftJoin('users', 'user_id', '=', 'schedule_user_id')
+        //     ->select('schedules.*', 'shift_name', 'leave_type', 'leave_desc')
+        //     ->get()
+        //     ->keyBy('schedule_date'); // KeyBy untuk akses cepat berdasarkan tanggal
+
+        // return collect($dates)->map(function ($date) use ($schedules) {
+        //     $schedule = $schedules->get($date);
+
+        //     return [
+        //         'schedule_id' => $schedule ? $schedule->schedule_id : 0,
+        //         'schedule_date' => $date,
+        //         'shift_id' => $schedule ? $schedule->schedule_shift_id : 0,
+        //         'shift_name' => $schedule ? $schedule->shift_name : 'Pilih jadwal',
+        //         'leave_id' => $schedule ? $schedule->schedule_leave_id : 0,
+        //         'leave_type' => $schedule ? $schedule->leave_type : '',
+        //         'leave_desc' => $schedule ? $schedule->leave_desc : '',
+        //     ];
+        // })->toArray();
     }
 
     private function formatResponse($res, $schedulesData)
