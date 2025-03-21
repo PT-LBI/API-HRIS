@@ -92,15 +92,15 @@ class MyDashboardController extends Controller
         } else {
             $data_schedule = $this->get_schedule($date);
 
-            if ($data_schedule['shift_is_different_day'] == 1) {
-                $data_schedule['shift_start_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_start_time'];
-                $data_schedule['shift_finish_time'] = Carbon::parse($data_schedule['schedule_date'])->addDay()->format('Y-m-d') . ' ' . $data_schedule['shift_finish_time'];
-            } else {
-                $data_schedule['shift_start_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_start_time'];
-                $data_schedule['shift_finish_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_finish_time'];
-            }
-
             if (!empty($data_schedule)){
+                if ($data_schedule['shift_is_different_day'] == 1) {
+                    $data_schedule['shift_start_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_start_time'];
+                    $data_schedule['shift_finish_time'] = Carbon::parse($data_schedule['schedule_date'])->addDay()->format('Y-m-d') . ' ' . $data_schedule['shift_finish_time'];
+                } else {
+                    $data_schedule['shift_start_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_start_time'];
+                    $data_schedule['shift_finish_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_finish_time'];
+                }
+                
                 if ($data_schedule['leave_type'] == 'leave') {
                     $title = 'Hari ini anda sedang cuti';
                 } elseif ($data_schedule['leave_type'] == 'permission') {
