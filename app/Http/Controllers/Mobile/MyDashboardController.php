@@ -100,7 +100,7 @@ class MyDashboardController extends Controller
                     $data_schedule['shift_start_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_start_time'];
                     $data_schedule['shift_finish_time'] = $data_schedule['schedule_date'] . ' ' . $data_schedule['shift_finish_time'];
                 }
-                
+
                 if ($data_schedule['leave_type'] == 'leave') {
                     $title = 'Hari ini anda sedang cuti';
                 } elseif ($data_schedule['leave_type'] == 'permission') {
@@ -133,25 +133,27 @@ class MyDashboardController extends Controller
         }
 
         //get difference time
-        if ($data_schedule['shift_is_different_day'] == 1) {
-            if ($data_presence) {
-                $shift_duration = Carbon::parse($data_presence['presence_out_time'])->diff(Carbon::parse($data_presence['presence_in_time']))->format('%H:%I:%S');
-            } else {
-                $shift_duration = '00:00:00';
-            }
-        } else {
-            if ($data_presence) {
-                if (!empty($data_presence['presence_in_time']) && !empty($data_presence['presence_out_time'])) {
+        if (!empty($data_schedule)){
+            if ($data_schedule['shift_is_different_day'] == 1) {
+                if ($data_presence) {
                     $shift_duration = Carbon::parse($data_presence['presence_out_time'])->diff(Carbon::parse($data_presence['presence_in_time']))->format('%H:%I:%S');
-                } else if (!empty($data_presence['presence_in_time'])) {
-                    $shift_duration = Carbon::parse($data_presence['presence_in_time'])->diff(Carbon::now()->addHours(7))->format('%H:%I:%S');
                 } else {
                     $shift_duration = '00:00:00';
                 }
+            } else {
+                if ($data_presence) {
+                    if (!empty($data_presence['presence_in_time']) && !empty($data_presence['presence_out_time'])) {
+                        $shift_duration = Carbon::parse($data_presence['presence_out_time'])->diff(Carbon::parse($data_presence['presence_in_time']))->format('%H:%I:%S');
+                    } else if (!empty($data_presence['presence_in_time'])) {
+                        $shift_duration = Carbon::parse($data_presence['presence_in_time'])->diff(Carbon::now()->addHours(7))->format('%H:%I:%S');
+                    } else {
+                        $shift_duration = '00:00:00';
+                    }
+                }
             }
-        }
 
-        $data_schedule['shift_duration'] = isset($shift_duration) ? $shift_duration : '00:00:00';
+            $data_schedule['shift_duration'] = isset($shift_duration) ? $shift_duration : '00:00:00';
+        }
 
         $count_notif = DB::table('log_notif')
             ->where('log_notif_user_id', auth()->user()->user_id)
